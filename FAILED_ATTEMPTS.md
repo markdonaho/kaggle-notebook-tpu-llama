@@ -74,3 +74,7 @@ ls: cannot access './scripts/conversion/': No such file or directory
 - **Pyenv Installation**: Failed in a non-interactive `gcloud compute ssh` command with `pyenv: command not found` because `~/.bashrc` was not sourced.
 - **Initial Conda Install**: Failed due to non-interactive script being blocked by Anaconda's Terms of Service prompt.
 - **Conda Python 3.10 Env**: Failed dependency resolution for `flax>=0.11.0`, which required Python 3.11+.
+- **Missing `torch` Dependency**: The conversion script failed with `ModuleNotFoundError: No module named 'torch'` because the library was not installed in the conda environment.
+- **Incorrect Python Execution**: The script failed with `ModuleNotFoundError: No module named 'MaxText'` because it was being run as a file (`python MaxText/...`) instead of as a module (`python -m MaxText...`), preventing relative imports.
+- **Incorrect `model-size` Argument**: The script failed with a `NotImplementedError` because the generic `model-size` "8b" was used instead of the specific key "llama3.1-8b" required by the script's parameter dictionary.
+- **Hugging Face Model Path**: The script failed with `IndexError: list index out of range` because it was expecting a local path to `.pth` files, not a Hugging Face model identifier. This was resolved by adding the `--huggingface-checkpoint True` flag.

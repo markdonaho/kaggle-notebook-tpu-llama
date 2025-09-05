@@ -79,6 +79,7 @@ conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r 
 conda create -y -n maxtext311 python=3.11
 conda activate maxtext311
 python -m pip install --upgrade pip --quiet
+pip install torch --quiet
 pip install 'huggingface_hub[cli]' --quiet
 
 echo '--- 2. Logging into Hugging Face Hub ---'
@@ -91,9 +92,10 @@ cd maxtext
 pip install -r requirements.txt
 
 echo '--- 4. Running MaxText conversion script ---'
-python MaxText/llama_or_mistral_ckpt.py \
+python -m MaxText.llama_or_mistral_ckpt \
   --base-model-path meta-llama/Meta-Llama-3.1-8B-Instruct \
-  --model-size 8b \
+  --model-size llama3.1-8b \
+  --huggingface-checkpoint True \
   --maxtext-model-path ./llama-3.1-8b-maxtext-checkpoint
 
 echo '--- 5. Uploading to GCS bucket ---'

@@ -1,107 +1,118 @@
 # Project Plan: Fine-Tuning a Llama 3.1 Summarizer for Knowledge Management
-Version: 7.0 Date: 2025-09-04 Status: Phase 2 Revised
-## Legend
-- ✅: Complete
-- 🔄: In Progress / Revised
-- ⏹️: Blocked
-- [ ]: Not Started
-## 1.0 Introduction & Vision
-This document outlines the complete, end-to-end plan to fine-tune a `meta-llama/Meta-Llama-3.1-8B-Instruct` model to serve as a specialized "Summarizer AI." The vision is to create a model that can automatically process raw meeting, podcast, and video transcripts and generate structured, interconnected, and human-readable knowledge summaries in Obsidian-flavored Markdown.
+Version: 8.0
+Date: 2025-09-05
+Status: Phase 2 Revised
 
-This Summarizer AI is the foundational component of a larger automated knowledge management pipeline. The subsequent phases of that pipeline, including the development of a RAG-based "Collaborator AI" and the implementation of a vector database, are considered separate projects that will build upon the successful completion of this plan.
+## Legend
+✅: Complete
+
+🔄: In Progress / Revised
+
+⏹️: Blocked
+
+[ ]: Not Started
+
+## 1.0 Introduction & Vision
+This document outlines the complete, end-to-end plan to fine-tune a meta-llama/Meta-Llama-3.1-8B-Instruct model to serve as a specialized "Summarizer AI." The vision is to create a model that can automatically process raw meeting, podcast, and video transcripts and generate structured, interconnected, and human-readable knowledge summaries in Obsidian-flavored Markdown.
+
+This Summarizer AI is the foundational component of a larger automated knowledge management pipeline. The subsequent phases of that pipeline are considered separate projects that will build upon the successful completion of this plan.
 
 ## Phase 1: Training Data Development ✅
-**Goal:** To produce a high-quality dataset of 500-2000 examples that teach the model to generate structured summary chunks associated with specific document sections.
-- **Session 1.1:** Raw Data Acquisition & "Golden Record" Creation ✅
-- **Session 1.2:** Dataset Chunking and Formatting (Tag and Assemble Method) ✅
+Goal: To produce a high-quality dataset of 500-2000 examples that teach the model to generate structured summary chunks associated with specific document sections.
+
+### Session 1.1: Raw Data Acquisition & "Golden Record" Creation ✅
+
+### Session 1.2: Dataset Chunking and Formatting (Tag and Assemble Method) ✅
 
 ## Phase 2: Environment & Model Preparation 🔄
-**Goal:** To prepare a JAX-native, Flax-converted version of the Llama 3.1 model and establish a stable, modern fine-tuning environment on Kaggle TPUs.
-- **Session 2.1:** Kaggle Environment Setup ✅
-  - [x] Create a new Notebook on Kaggle and select the "TPU v3-8" accelerator. ✅
-- **Session 2.2:** JAX and Library Installation ✅
-  - **Objective:** To establish a stable and up-to-date library configuration in the main Kaggle training notebook.
-  - **Actionable Steps:**
-    - In the first cell, run the installation command with the latest verified libraries. The dependency conflicts from the initial attempts are no longer a concern as the model conversion will happen offline.
-      ```python
-      # STEP 1: COMPREHENSIVE ENVIRONMENT SETUP
-      !pip install "jax[tpu]" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
-      !pip install git+https://github.com/huggingface/transformers.git flax optax datasets sentencepiece orbax-checkpointing pyyaml
-      ```
-    - Verify the connection to all 8 TPU cores.
-- **Session 2.3:** Model Conversion & Kaggle Dataset Creation (GCP Method) ⏹️
-  - **Objective:** To bypass Kaggle's RAM and disk limitations by using a powerful Google Cloud VM for a one-time model conversion. The final Flax model will be saved as a private Kaggle Dataset for fast, reliable access.
-  - **Status:** BLOCKED - transformers library does not support conversion of sharded safetensors checkpoints to Flax format. Requires research into alternative conversion methods.
-  - **Path A (Primary): Convert and Upload to Kaggle**
-    - [ ] Create GCP VM: Spin up a temporary, powerful Google Compute Engine VM (e.g., n2-standard-8 with 32GB RAM and 100GB disk) from a Deep Learning image.
-    - [ ] Run Conversion Script on VM: SSH into the VM and run a clean Python script using the latest libraries to download the PyTorch model, convert it to Flax, and save it.
-      ```python
-      # convert_model.py (to be run on GCP VM)
-      import jax.numpy as jnp
-      from transformers import FlaxAutoModelForCausalLM, AutoTokenizer
+Goal: To prepare a JAX-native version of the Llama 3.1 model using the MaxText framework and establish a stable fine-tuning environment on Kaggle TPUs.
 
-      model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"
-      save_path = f"./{model_id.split('/')[-1]}-Flax"
+### Session 2.1: Kaggle Environment Setup ✅
 
-      print(f"Starting conversion for {model_id}...")
-      flax_model = FlaxAutoModelForCausalLM.from_pretrained(
-          model_id, from_pt=True, dtype=jnp.bfloat16
-      )
-      tokenizer = AutoTokenizer.from_pretrained(model_id)
+[x] Create a new Notebook on Kaggle and select the "TPU v3-8" accelerator. ✅
 
-      print(f"Saving converted Flax model to {save_path}...")
-      flax_model.save_pretrained(save_path)
-      tokenizer.save_pretrained(save_path)
-      print("✅ Conversion complete!")
-      ```
-    - [ ] Download Locally: Use `gcloud compute scp` to download the final `Meta-Llama-3.1-8B-Instruct-Flax` directory from the VM to your local machine.
-    - [ ] Create Kaggle Dataset: Use the Kaggle UI or API to upload the directory and create a new private dataset.
-    - [ ] Teardown VM: Shut down or delete the GCP VM to avoid incurring further costs.
-  - **Path B (Backup): Convert and Store in GCS**
-    - [ ] Upload to GCS: If the Kaggle Dataset path fails, run the conversion on the GCP VM as described above, but instead of downloading, upload the final directory directly to a Google Cloud Storage (GCS) bucket.
-      ```bash
-      gcloud storage cp -r ./Meta-Llama-3.1-8B-Instruct-Flax gs://your-gcs-bucket-name/
-      ```
-    - [ ] Configure Kaggle Access: Create a GCP Service Account with "Storage Object Viewer" permissions, generate a JSON key, and add it to Kaggle secrets.
-- **Session 2.4:** Model Loading & Verification [ ]
-  - **Objective:** To successfully load the pre-converted Flax model from the Kaggle Dataset into the main training notebook.
-  - **Actionable Steps:**
-    - [ ] Attach Dataset: In the main TPU notebook, use the "Add Data" panel to attach the private Kaggle dataset created in Session 2.3.
-    - [ ] Load from Local Path: Modify the loading script to point to the immutable `/kaggle/input/...path`. The `from_pt=True` flag is no longer needed.
-      ```python
-      # LOAD TOKENIZER AND MODEL FROM KAGGLE DATASET
-      import jax
-      from transformers import AutoTokenizer, FlaxAutoModelForCausalLM
+### Session 2.2: JAX and Library Installation ✅
 
-      local_model_path = "/kaggle/input/meta-llama-3-1-8b-instruct-flax/Meta-Llama-3.1-8B-Instruct-Flax"
+Objective: To establish a stable and up-to-date library configuration in the main Kaggle training notebook.
 
-      print(f"Loading tokenizer and Flax model from: {local_model_path}...")
-      tokenizer = AutoTokenizer.from_pretrained(local_model_path)
-      model = FlaxAutoModelForCausalLM.from_pretrained(
-          local_model_path,
-          dtype=jax.numpy.bfloat16,
-      )
-      print("✅ Tokenizer and Flax model loaded successfully.")
-      ```
-    - [ ] Final Verification: Print the model config to confirm successful loading.
+Actionable Steps:
+
+[x] In the first cell, run the JAX installation command. MaxText's own requirements will be installed later.
+
+#### STEP 1: INSTALL JAX FOR TPU
+!pip install "jax[tpu]" -f [https://storage.googleapis.com/jax-releases/libtpu_releases.html](https://storage.googleapis.com/jax-releases/libtpu_releases.html)
+
+[x] Verify the connection to all 8 TPU cores. ✅
+
+### Session 2.3: Model Conversion with MaxText (GCP Method) [🔄]
+
+Objective: To bypass Kaggle's limitations by using a Google Cloud VM to run MaxText's conversion script, converting the PyTorch weights into a MaxText-compatible JAX checkpoint stored in Google Cloud Storage.
+
+Status: In Progress. The `run_conversion.sh` script successfully creates the VM and sets up the conda environment, but fails on the final conversion step due to a missing `torch` dependency.
+
+Actionable Steps:
+
+[x] Create GCP VM: Spin up a temporary, powerful Google Compute Engine VM (e.g., n2-standard-8 with 32GB RAM and 100GB disk).
+[x] Setup MaxText on VM: SSH into the VM, clone the MaxText repository, and install its dependencies.
+[ ] Run MaxText Conversion: Use MaxText's built-in conversion script. You'll need to accept the Llama 3.1 terms and get a Hugging Face token first. The script handles downloading the sharded safetensors and converting them into a single JAX checkpoint.
+
+# First, log in to Hugging Face
+huggingface-cli login
+
+# Run the conversion script, pointing output to your GCS bucket
+python MaxText/llama_or_mistral_ckpt.py \
+  --base-model-path meta-llama/Meta-Llama-3.1-8B-Instruct \
+  --model-size 8b \
+  --maxtext-model-path gs://your-gcs-bucket-name/llama-3.1-8b-maxtext-checkpoint
+
+[ ] Verify Output: Confirm that the converted JAX checkpoint files have been saved to your Google Cloud Storage (GCS) bucket.
+
+[ ] Teardown VM: Shut down or delete the GCP VM to avoid incurring further costs.
+
+### Session 2.4: Configure Kaggle for MaxText Training [ ]
+
+Objective: To set up the Kaggle TPU notebook to run a MaxText fine-tuning job using the GCS checkpoint.
+
+Actionable Steps:
+
+[ ] Configure GCS Access: Create a GCP Service Account with "Storage Object Viewer" permissions, generate a JSON key, and add it to Kaggle secrets.
+
+[ ] Clone MaxText in Kaggle: In your notebook, clone the MaxText repository and install its requirements.
+
+!git clone [https://github.com/google/maxtext.git](https://github.com/google/maxtext.git)
+!pip install -r maxtext/requirements.txt
+
+[ ] Prepare Training Config: Create a MaxText configuration file (.yml) for your fine-tuning job. This file will define the model paths, dataset, and training parameters. You will point the load_parameters_path to your GCS checkpoint.
+
+[ ] Initial Verification: Run a small MaxText command (e.g., an evaluation step with steps=1) to ensure it can access the GCS checkpoint and initialize the model on the TPU correctly before starting the full training job.
 
 ## Phase 3: Fine-Tuning the Summarizer Model [ ]
-**Goal:** To efficiently fine-tune the Llama 3.1 8B-Instruct model on the prepared dataset using LoRA and a JAX-compiled, multi-core training loop.
-- [ ] Load & Tokenize Data
-- [ ] Configure LoRA
-- [ ] Define Training State
-- [ ] Implement JIT & PMAP-Compiled Training Step
-- [ ] Execute Training Loop
-- [ ] Implement Checkpointing
-- [ ] Save Final Adapters
+Goal: To efficiently fine-tune the Llama 3.1 model on the prepared dataset using the MaxText framework on Kaggle TPUs.
+
+[ ] Upload and Prepare Dataset for MaxText
+
+[ ] Create Custom Fine-Tuning Configuration (.yml)
+
+[ ] Execute MaxText Training Script
+
+[ ] Monitor Training and Log Metrics
+
+[ ] Save Final Checkpoint to GCS
 
 ## Phase 4: Inference, Validation, and Assembly [ ]
-**Goal:** To test the fine-tuned model and build the final "Tag and Assemble" pipeline that generates complete summary documents efficiently.
-- [ ] Load Fine-Tuned Model
-- [ ] Qualitative Validation
-- [ ] Develop the Full Summarization Pipeline ("Tag and Assemble")
+Goal: To test the fine-tuned model and build the final "Tag and Assemble" pipeline that generates complete summary documents.
+
+[ ] Load Fine-Tuned Checkpoint in an Inference Environment
+
+[ ] Perform Qualitative Validation on Test Data
+
+[ ] Develop the Full Summarization Pipeline ("Tag and Assemble")
 
 ## Phase 5: Saving & Deploying the Model [ ]
-**Goal:** To save the final model for persistent use and separate the training environment from the inference environment.
-- [ ] Push to Hub
-- [ ] Create Inference Notebook
+Goal: To save the final model artifacts for persistent use and create a clean inference environment.
+
+[ ] Document Final Model and Save Artifacts
+
+[ ] Create a Standalone Inference Notebook
+
+

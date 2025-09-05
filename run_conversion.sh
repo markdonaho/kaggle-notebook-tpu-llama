@@ -11,63 +11,114 @@ export PROJECT_ID="llama-flax-conversion"
 export VM_NAME="llama-flax-converter-v2"
 export VM_ZONE="us-central1-a"
 
+# --- Step 1: Create an "Overkill" GCE VM (idempotent) ---
+# Machine: n2-highmem-16 (16 vCPU, 128GB RAM)
+# Disk: 200GB Persistent SSD for fast I/O
+if gcloud compute instances describe $VM_NAME --project=$PROJECT_ID --zone=$VM_ZONE >/dev/null 2>&1; then
+    echo "ℹ️ VM already exists: $VM_NAME. Skipping creation."
+else
+    echo "🚀 Creating a powerful n2-highmem-16 VM with an SSD..."
+    gcloud compute instances create $VM_NAME \
+        --project=$PROJECT_ID \
+        --zone=$VM_ZONE \
+        --machine-type="n2-highmem-16" \
+        --image="c2-deeplearning-pytorch-2-4-cu124-v20250325-debian-11" \
+        --image-project="ml-images" \
+        --boot-disk-type="pd-ssd" \
+        --boot-disk-size="200GB" \
+        --quiet
+fi
+
+# --- Step 1b: Wait for SSH readiness ---
+echo "⏳ Waiting for SSH to become ready on $VM_NAME ..."
+for attempt in {1..30}; do
+    if gcloud compute ssh $VM_NAME --zone=$VM_ZONE --project=$PROJECT_ID --quiet --command="echo ready" >/dev/null 2>&1; then
+        echo "✅ SSH is ready."
+        break
+    else
+        echo "Retry $attempt/30 ..."
+        sleep 10
+    fi
+done
+
 # --- Step 2: SSH and Run the Entire Process Non-Interactively ---
 echo "💻 Connecting to VM to run the full, automated process..."
 gcloud compute ssh $VM_NAME --zone=$VM_ZONE --project=$PROJECT_ID --quiet --command="
 # Exit script if any command fails
 set -e
 
-echo '--- 1. Setting up environment ---'
+echo '--- 1. Setting up environment (Python 3.10 via conda) ---'
 while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
    echo 'Waiting for unattended-upgrades to finish...'
    sleep 5
 done
 
-sudo sed -i -e '/backports/s/^#*/#/' /etc/apt/sources.list
+# Clean up any stale backports entries that cause 404s
+sudo rm -f /etc/apt/sources.list.d/backports.list || true
+sudo sed -i '/backports/d' /etc/apt/sources.list || true
+
 sudo apt-get update -y
-sudo apt-get install -y python3-pip git
-pip install --upgrade pip --quiet
-pip install 'huggingface_hub[cli]' flax transformers sentencepiece protobuf torch jax[cpu] --quiet
+sudo apt-get install -y git curl
+
+# Initialize or install conda
+if [ -f /opt/conda/etc/profile.d/conda.sh ]; then
+  source /opt/conda/etc/profile.d/conda.sh
+elif [ -f "\$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
+  source "\$HOME/miniconda3/etc/profile.d/conda.sh"
+else
+  curl -sLo miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+  bash miniconda.sh -b -p "\$HOME/miniconda3"
+  source "\$HOME/miniconda3/etc/profile.d/conda.sh"
+fi
+
+# Accept conda Terms of Service for non-interactive use
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main || true
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r || true
+
+# Create and activate Python 3.11 env (needed for flax>=0.11.0)
+conda create -y -n maxtext311 python=3.11
+conda activate maxtext311
+python -m pip install --upgrade pip --quiet
+pip install 'huggingface_hub[cli]' --quiet
 
 echo '--- 2. Logging into Hugging Face Hub ---'
-\$HOME/.local/bin/huggingface-cli login --token '$HF_TOKEN'
+huggingface-cli login --token '$HF_TOKEN'
 
-echo '--- 3. Downloading PyTorch model ---'
-\$HOME/.local/bin/huggingface-cli download meta-llama/Meta-Llama-3.1-8B-Instruct \
-    --local-dir ./Meta-Llama-3.1-8B-Instruct-PyTorch \
-    --repo-type model
+echo '--- 3. Cloning MaxText repository ---'
+rm -rf maxtext
+git clone https://github.com/google/maxtext.git
+cd maxtext
+pip install -r requirements.txt
 
-echo '--- 4. Cloning Transformers to get conversion script ---'
-rm -rf transformers
-git clone https://github.com/huggingface/transformers.git
-cd transformers
+echo '--- 4. Running MaxText conversion script ---'
+python MaxText/llama_or_mistral_ckpt.py \
+  --base-model-path meta-llama/Meta-Llama-3.1-8B-Instruct \
+  --model-size 8b \
+  --maxtext-model-path ./llama-3.1-8b-maxtext-checkpoint
 
-echo '--- 5. Finding and running the conversion script ---'
-CONVERSION_SCRIPT=\$(find . -name 'convert_pytorch_checkpoint_to_flax.py')
-if [ -z "\$CONVERSION_SCRIPT" ]; then
-    echo 'Conversion script not found in the repository!'
-    exit 1
-fi
-echo "Found conversion script at: \$CONVERSION_SCRIPT"
+echo '--- 5. Uploading to GCS bucket ---'
+# Note: You'll need to set up GCS bucket and authentication
+# gsutil cp -r ./llama-3.1-8b-maxtext-checkpoint gs://your-bucket-name/
 
-python3 \$CONVERSION_SCRIPT \
-    --pytorch_checkpoint_path ../Meta-Llama-3.1-8B-Instruct-PyTorch \
-    --flax_dump_path ../Meta-Llama-3.1-8B-Instruct-Flax
-
-echo '🎉✅ SUCCESS! The conversion is complete on the VM.'
+echo '🎉✅ SUCCESS! The MaxText conversion is complete on the VM.'
 "
 
 # --- Step 3: Provide Instructions for Next Steps ---
 echo "
 ------------------------------------------------------------------
-✅ The automated script has finished on the VM.
+✅ The automated MaxText conversion script has finished on the VM.
 
 NEXT STEPS:
 
-1. Download the converted files to Cloud Shell with this command:
-gcloud compute scp --recurse \${VM_NAME}:~/Meta-Llama-3.1-8B-Instruct-Flax . --zone=\${VM_ZONE} --project=\${PROJECT_ID}
+1. Set up a GCS bucket and upload the converted checkpoint:
+   gcloud compute ssh \${VM_NAME} --zone=\${VM_ZONE} --project=\${PROJECT_ID} --command="
+     gsutil mb gs://\${PROJECT_ID}-llama-checkpoints
+     gsutil cp -r ~/maxtext/llama-3.1-8b-maxtext-checkpoint gs://\${PROJECT_ID}-llama-checkpoints/
+   "
 
-2. After you have the files, DELETE THE VM to avoid costs with this command:
-gcloud compute instances delete \${VM_NAME} --zone=\${VM_ZONE} --project=\${PROJECT_ID} --quiet
+2. After uploading to GCS, DELETE THE VM to avoid costs:
+   gcloud compute instances delete \${VM_NAME} --zone=\${VM_ZONE} --project=\${PROJECT_ID} --quiet
+
+3. Use the GCS checkpoint path in your Kaggle TPU notebook for fine-tuning
 ------------------------------------------------------------------
 "

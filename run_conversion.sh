@@ -18,7 +18,6 @@ gcloud compute ssh $VM_NAME --zone=$VM_ZONE --project=$PROJECT_ID --quiet --comm
 set -e
 
 echo '--- 1. Setting up environment ---'
-# --- FIX: Wait for any automatic system updates to finish before we run apt ---
 while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
    echo 'Waiting for unattended-upgrades to finish...'
    sleep 5
@@ -28,34 +27,30 @@ sudo sed -i -e '/backports/s/^#*/#/' /etc/apt/sources.list
 sudo apt-get update -y
 sudo apt-get install -y python3-pip git
 pip install --upgrade pip --quiet
-pip install 'huggingface_hub[cli]' flax sentencepiece protobuf torch jax[cpu] --quiet
-
-# Add the local bin directory to the PATH - THIS DID NOT WORK
-# export PATH=$HOME/.local/bin:$PATH
+pip install 'huggingface_hub[cli]' flax transformers sentencepiece protobuf torch jax[cpu] --quiet
 
 echo '--- 2. Logging into Hugging Face Hub ---'
-$HOME/.local/bin/huggingface-cli login --token '$HF_TOKEN'
+\$HOME/.local/bin/huggingface-cli login --token '$HF_TOKEN'
 
-echo '--- 3. Downloading PyTorch model using huggingface-cli ---'
-$HOME/.local/bin/huggingface-cli download meta-llama/Meta-Llama-3.1-8B-Instruct \
+echo '--- 3. Downloading PyTorch model ---'
+\$HOME/.local/bin/huggingface-cli download meta-llama/Meta-Llama-3.1-8B-Instruct \
     --local-dir ./Meta-Llama-3.1-8B-Instruct-PyTorch \
     --repo-type model
 
-echo '--- 4. Cloning and checking out a stable Transformers version ---'
+echo '--- 4. Cloning Transformers to get conversion script ---'
 rm -rf transformers
 git clone https://github.com/huggingface/transformers.git
 cd transformers
-git checkout v4.36.2
 
-echo '--- 5. Running diagnostics before conversion ---'
-echo \"Current directory: \$(pwd)\"
-echo \"--- Listing contents of scripts/conversion directory ---\"
-ls -l ./scripts/conversion/
-echo \"--- Searching for the conversion script ---\"
-find . -name 'convert_pytorch_checkpoint_to_flax.py'
+echo '--- 5. Finding and running the conversion script ---'
+CONVERSION_SCRIPT=\$(find . -name 'convert_pytorch_checkpoint_to_flax.py')
+if [ -z "\$CONVERSION_SCRIPT" ]; then
+    echo 'Conversion script not found in the repository!'
+    exit 1
+fi
+echo "Found conversion script at: \$CONVERSION_SCRIPT"
 
-echo '--- 6. Running the PyTorch-to-Flax conversion from within transformers dir ---'
-python3 ./scripts/conversion/convert_pytorch_checkpoint_to_flax.py \
+python3 \$CONVERSION_SCRIPT \
     --pytorch_checkpoint_path ../Meta-Llama-3.1-8B-Instruct-PyTorch \
     --flax_dump_path ../Meta-Llama-3.1-8B-Instruct-Flax
 

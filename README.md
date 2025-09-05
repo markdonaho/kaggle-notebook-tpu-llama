@@ -29,8 +29,9 @@ This Summarizer AI is the foundational component of a larger automated knowledge
       !pip install git+https://github.com/huggingface/transformers.git flax optax datasets sentencepiece orbax-checkpointing pyyaml
       ```
     - Verify the connection to all 8 TPU cores.
-- **Session 2.3:** Model Conversion & Kaggle Dataset Creation (GCP Method) [ ]
+- **Session 2.3:** Model Conversion & Kaggle Dataset Creation (GCP Method) ⏹️
   - **Objective:** To bypass Kaggle's RAM and disk limitations by using a powerful Google Cloud VM for a one-time model conversion. The final Flax model will be saved as a private Kaggle Dataset for fast, reliable access.
+  - **Status:** BLOCKED - transformers library does not support conversion of sharded safetensors checkpoints to Flax format. Requires research into alternative conversion methods.
   - **Path A (Primary): Convert and Upload to Kaggle**
     - [ ] Create GCP VM: Spin up a temporary, powerful Google Compute Engine VM (e.g., n2-standard-8 with 32GB RAM and 100GB disk) from a Deep Learning image.
     - [ ] Run Conversion Script on VM: SSH into the VM and run a clean Python script using the latest libraries to download the PyTorch model, convert it to Flax, and save it.

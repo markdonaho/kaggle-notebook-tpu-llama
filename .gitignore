@@ -1,2 +1,6 @@
 # Environment variables
 .env
+
+# Model Checkpoints
+checkpoint_download/
+gcs_upload/

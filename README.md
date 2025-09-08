@@ -1,7 +1,7 @@
 # Project Plan: Fine-Tuning a Llama 3.1 Summarizer for Knowledge Management
-Version: 8.0
-Date: 2025-09-05
-Status: Phase 2 Revised
+Version: 8.1
+Date: 2025-09-08
+Status: Phase 2 - Checkpoint Ready for Kaggle Upload
 
 ## Legend
 ✅: Complete
@@ -63,30 +63,31 @@ Actionable Steps:
 [x] Fix Weight Names in Conversion Script: Use `model.norm.weight`
 [x] Run MaxText Conversion: Completed with local HF snapshot
 [x] Verify Output: Checkpoint saved at `/home/markdonaho/maxtext/llama-3.1-8b-maxtext-checkpoint`
-[ ] Upload to GCS: `gsutil -m rsync -r ./llama-3.1-8b-maxtext-checkpoint gs://<your-bucket>/llama-3.1-8b-maxtext-checkpoint`
-[ ] Teardown VM: Delete the GCE VM to avoid costs
+[x] Download to Local: Checkpoint successfully downloaded from VM to local `./checkpoint_download` directory via `download_from_vm.sh` script.
+[ ] Upload to Kaggle Dataset: The local checkpoint directory should be uploaded as a new private Kaggle dataset.
+[x] Teardown VM: Delete the GCE VM to avoid costs.
 
 Next Steps:
-- Upload the checkpoint directory from the VM to your GCS bucket
-- Update Kaggle notebook to load from `gs://<your-bucket>/llama-3.1-8b-maxtext-checkpoint`
-- Proceed to Session 2.4 (configure Kaggle for training)
+- Upload the local checkpoint directory (`./checkpoint_download/llama-3.1-8b-maxtext-checkpoint`) as a new private dataset on Kaggle.
+- Update the Kaggle notebook to use the new Kaggle dataset as the source for the fine-tuning checkpoint.
+- Proceed to Session 2.4 (configure Kaggle for training).
 
 ### Session 2.4: Configure Kaggle for MaxText Training [ ]
 
-Objective: To set up the Kaggle TPU notebook to run a MaxText fine-tuning job using the GCS checkpoint.
+Objective: To set up the Kaggle TPU notebook to run a MaxText fine-tuning job using the checkpoint from the newly created Kaggle dataset.
 
 Actionable Steps:
 
-[ ] Configure GCS Access: Create a GCP Service Account with "Storage Object Viewer" permissions, generate a JSON key, and add it to Kaggle secrets.
-
+[ ] Create Kaggle Dataset: Upload the local checkpoint files to a new private dataset.
+[ ] Configure Kaggle Notebook Access: In the notebook, add the new dataset as an input source. The path will typically be `/kaggle/input/<your-dataset-name>/`.
 [ ] Clone MaxText in Kaggle: In your notebook, clone the MaxText repository and install its requirements.
 
 !git clone [https://github.com/google/maxtext.git](https://github.com/google/maxtext.git)
 !pip install -r maxtext/requirements.txt
 
-[ ] Prepare Training Config: Create a MaxText configuration file (.yml) for your fine-tuning job. This file will define the model paths, dataset, and training parameters. You will point the load_parameters_path to your GCS checkpoint.
+[ ] Prepare Training Config: Create a MaxText configuration file (.yml) for your fine-tuning job. This file will define the model paths, dataset, and training parameters. You will point the `load_parameters_path` to your new Kaggle dataset path (e.g., `/kaggle/input/<your-dataset-name>/llama-3.1-8b-maxtext-checkpoint`).
 
-[ ] Initial Verification: Run a small MaxText command (e.g., an evaluation step with steps=1) to ensure it can access the GCS checkpoint and initialize the model on the TPU correctly before starting the full training job.
+[ ] Initial Verification: Run a small MaxText command (e.g., an evaluation step with `steps=1`) to ensure it can access the Kaggle dataset checkpoint and initialize the model on the TPU correctly before starting the full training job.
 
 ## Phase 3: Fine-Tuning the Summarizer Model [ ]
 Goal: To efficiently fine-tune the Llama 3.1 model on the prepared dataset using the MaxText framework on Kaggle TPUs.

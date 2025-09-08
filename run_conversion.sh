@@ -1,9 +1,23 @@
 #!/bin/bash
 set -e # Exit on error
 
-# Source environment variables
+# --- Instructions for Setup ---
+# 1. Make sure you have the gcloud CLI installed and authenticated.
+# 2. Create a file named .env in the same directory as this script.
+# 3. Add your Hugging Face User Access Token to the .env file like this:
+#    HF_TOKEN="hf_your_token_here"
+# 4. Run this script from your terminal: ./run_conversion.sh
+
+# --- Source environment variables for HF_TOKEN ---
 if [ -f .env ]; then
-  export $(cat .env | sed 's/#.*//g' | xargs)
+  # Use sed to handle potential Windows carriage returns and ignore comments
+  export $(cat .env | sed 's/\r$//' | sed 's/#.*//g' | xargs)
+fi
+
+if [ -z "$HF_TOKEN" ]; then
+    echo "❌ ERROR: HF_TOKEN is not set."
+    echo "Please create a .env file and add your Hugging Face token to it."
+    exit 1
 fi
 
 # --- Configuration ---
@@ -40,6 +54,10 @@ for attempt in {1..30}; do
         sleep 10
     fi
 done
+
+# --- Step 1c: Copy inspection script to VM ---
+echo "📤 Copying inspect_module_path.py to the VM..."
+gcloud compute scp inspect_module_path.py $VM_NAME:~/ --zone=$VM_ZONE --project=$PROJECT_ID --quiet
 
 # --- Step 2: SSH and Run the Entire Process Non-Interactively ---
 echo "💻 Connecting to VM to run the full, automated process..."
@@ -85,20 +103,35 @@ pip install 'huggingface_hub[cli]' --quiet
 echo '--- 2. Logging into Hugging Face Hub ---'
 huggingface-cli login --token '$HF_TOKEN'
 
-echo '--- 3. Cloning MaxText repository ---'
+echo '--- 3. Cloning MaxText repository and installing dependencies ---'
 rm -rf maxtext
 git clone https://github.com/google/maxtext.git
 cd maxtext
 pip install -r requirements.txt
+echo '--- Installing MaxText in editable mode ---'
+pip install -e .
 
-echo '--- 4. Running MaxText conversion script ---'
+echo '--- Applying patch for Llama 3.1 weight names ---'
+# Use single quotes and escaped inner quotes for robustness
+sed -i 's/"norm.weight"/"model.norm.weight"/g' src/MaxText/llama_or_mistral_ckpt.py
+
+echo '--- Verifying patch ---'
+grep "model.norm.weight" src/MaxText/llama_or_mistral_ckpt.py
+
+echo '--- Clearing Python cache ---'
+find . -type d -name "__pycache__" -exec rm -r {} +
+
+echo '--- DEBUG: Finding the exact module path ---'
+python ~/inspect_module_path.py
+
+echo '--- Running MaxText conversion script ---'
 python -m MaxText.llama_or_mistral_ckpt \
   --base-model-path meta-llama/Meta-Llama-3.1-8B-Instruct \
   --model-size llama3.1-8b \
   --huggingface-checkpoint True \
   --maxtext-model-path ./llama-3.1-8b-maxtext-checkpoint
 
-echo '--- 5. Uploading to GCS bucket ---'
+echo '--- Uploading to GCS bucket ---'
 # Note: You'll need to set up GCS bucket and authentication
 # gsutil cp -r ./llama-3.1-8b-maxtext-checkpoint gs://your-bucket-name/
 

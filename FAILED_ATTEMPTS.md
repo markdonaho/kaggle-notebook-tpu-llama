@@ -78,3 +78,19 @@ ls: cannot access './scripts/conversion/': No such file or directory
 - **Incorrect Python Execution**: The script failed with `ModuleNotFoundError: No module named 'MaxText'` because it was being run as a file (`python MaxText/...`) instead of as a module (`python -m MaxText...`), preventing relative imports.
 - **Incorrect `model-size` Argument**: The script failed with a `NotImplementedError` because the generic `model-size` "8b" was used instead of the specific key "llama3.1-8b" required by the script's parameter dictionary.
 - **Hugging Face Model Path**: The script failed with `IndexError: list index out of range` because it was expecting a local path to `.pth` files, not a Hugging Face model identifier. This was resolved by adding the `--huggingface-checkpoint True` flag.
+
+## 7. MaxText Conversion Script Failures (Post-Environment Setup)
+**Method**: Iteratively debugging the `llama_or_mistral_ckpt.py` script and its execution within the `run_conversion.sh` automation script.
+**Result**: Uncovered and resolved a series of issues related to file paths, Python module resolution, and incorrect assumptions about the model's weight names.
+
+**Failed Sub-Approaches & Resolutions**:
+- **Incorrect Patch Path**: The `sed` command to patch the conversion script initially failed with `sed: can't read llama_or_mistral_ckpt.py: No such file or directory`.
+    - **Resolution**: The file was located in a subdirectory. Corrected the path to `src/MaxText/llama_or_mistral_ckpt.py`.
+- **Module Not Found**: The script failed with `ModuleNotFoundError: No module named 'MaxText'`, even when running from the `maxtext` directory.
+    - **Resolution**: The cloned repository was not installed as a package. Added `pip install -e .` to the script to install it in editable mode, making the `MaxText` module available to the Python interpreter.
+- **Persistent `KeyError` Cycle**: The script toggled between `KeyError: 'norm.weight'` and `KeyError: 'model.norm.weight'`, indicating the `sed` patch was working but the underlying assumption was wrong.
+    - **Resolution**: Added a diagnostic step to the script (`inspect_keys.py`) to print all weight names from the downloaded model. This confirmed the correct key was indeed `model.norm.weight`.
+- **Python Bytecode Caching**: The `sed` patch appeared to have no effect on subsequent runs, causing the same `KeyError`. This was identified as a potential caching issue where Python was executing the old, un-patched `.pyc` file.
+    - **Resolution**: Added a command `find . -type d -name "__pycache__" -exec rm -r {} +` to the script to forcefully clear all Python bytecode caches before running the conversion. This, combined with the correct `sed` command, is the final configuration.
+- **Shell Syntax Error**: An attempt to run the key-inspection code as an inline Python command failed with `syntax error near unexpected token '('` due to how the shell interpreted the string.
+    - **Resolution**: Switched from an inline command to copying and executing a dedicated `.py` script (`inspect_keys.py`) to avoid shell parsing issues.

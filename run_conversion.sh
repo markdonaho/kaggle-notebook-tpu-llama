@@ -55,87 +55,17 @@ for attempt in {1..30}; do
     fi
 done
 
-# --- Step 1c: Copy inspection script to VM ---
-echo "📤 Copying inspect_module_path.py to the VM..."
-gcloud compute scp inspect_module_path.py $VM_NAME:~/ --zone=$VM_ZONE --project=$PROJECT_ID --quiet
+# --- Step 1c: Copy helper scripts to VM ---
+echo "📤 Copying execution and inspection scripts to the VM..."
+gcloud compute scp inspect_module_path.py remote_executor.sh $VM_NAME:~/ --zone=$VM_ZONE --project=$PROJECT_ID --quiet
 
-# --- Step 2: SSH and Run the Entire Process Non-Interactively ---
+# --- Step 2: SSH and Run the Executor Script ---
 echo "💻 Connecting to VM to run the full, automated process..."
+# Pass the HF_TOKEN to the remote script as the first argument.
+# The remote script is responsible for making itself executable.
 gcloud compute ssh $VM_NAME --zone=$VM_ZONE --project=$PROJECT_ID --quiet --command="
-# Exit script if any command fails
-set -e
-
-echo '--- 1. Setting up environment (Python 3.10 via conda) ---'
-while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
-   echo 'Waiting for unattended-upgrades to finish...'
-   sleep 5
-done
-
-# Clean up any stale backports entries that cause 404s
-sudo rm -f /etc/apt/sources.list.d/backports.list || true
-sudo sed -i '/backports/d' /etc/apt/sources.list || true
-
-sudo apt-get update -y
-sudo apt-get install -y git curl
-
-# Initialize or install conda
-if [ -f /opt/conda/etc/profile.d/conda.sh ]; then
-  source /opt/conda/etc/profile.d/conda.sh
-elif [ -f "\$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
-  source "\$HOME/miniconda3/etc/profile.d/conda.sh"
-else
-  curl -sLo miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-  bash miniconda.sh -b -p "\$HOME/miniconda3"
-  source "\$HOME/miniconda3/etc/profile.d/conda.sh"
-fi
-
-# Accept conda Terms of Service for non-interactive use
-conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main || true
-conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r || true
-
-# Create and activate Python 3.11 env (needed for flax>=0.11.0)
-conda create -y -n maxtext311 python=3.11
-conda activate maxtext311
-python -m pip install --upgrade pip --quiet
-pip install torch --quiet
-pip install 'huggingface_hub[cli]' --quiet
-
-echo '--- 2. Logging into Hugging Face Hub ---'
-huggingface-cli login --token '$HF_TOKEN'
-
-echo '--- 3. Cloning MaxText repository and installing dependencies ---'
-rm -rf maxtext
-git clone https://github.com/google/maxtext.git
-cd maxtext
-pip install -r requirements.txt
-echo '--- Installing MaxText in editable mode ---'
-pip install -e .
-
-echo '--- Applying patch for Llama 3.1 weight names ---'
-# Use single quotes and escaped inner quotes for robustness
-sed -i 's/"norm.weight"/"model.norm.weight"/g' src/MaxText/llama_or_mistral_ckpt.py
-
-echo '--- Verifying patch ---'
-grep "model.norm.weight" src/MaxText/llama_or_mistral_ckpt.py
-
-echo '--- Clearing Python cache ---'
-find . -type d -name "__pycache__" -exec rm -r {} +
-
-echo '--- DEBUG: Finding the exact module path ---'
-python ~/inspect_module_path.py
-
-echo '--- Running MaxText conversion script ---'
-python -m MaxText.llama_or_mistral_ckpt \
-  --base-model-path meta-llama/Meta-Llama-3.1-8B-Instruct \
-  --model-size llama3.1-8b \
-  --huggingface-checkpoint True \
-  --maxtext-model-path ./llama-3.1-8b-maxtext-checkpoint
-
-echo '--- Uploading to GCS bucket ---'
-# Note: You'll need to set up GCS bucket and authentication
-# gsutil cp -r ./llama-3.1-8b-maxtext-checkpoint gs://your-bucket-name/
-
-echo '🎉✅ SUCCESS! The MaxText conversion is complete on the VM.'
+  chmod +x ./remote_executor.sh
+  ./remote_executor.sh '$HF_TOKEN'
 "
 
 # --- Step 3: Provide Instructions for Next Steps ---

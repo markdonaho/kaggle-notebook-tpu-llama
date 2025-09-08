@@ -94,3 +94,25 @@ ls: cannot access './scripts/conversion/': No such file or directory
     - **Resolution**: Added a command `find . -type d -name "__pycache__" -exec rm -r {} +` to the script to forcefully clear all Python bytecode caches before running the conversion. This, combined with the correct `sed` command, is the final configuration.
 - **Shell Syntax Error**: An attempt to run the key-inspection code as an inline Python command failed with `syntax error near unexpected token '('` due to how the shell interpreted the string.
     - **Resolution**: Switched from an inline command to copying and executing a dedicated `.py` script (`inspect_keys.py`) to avoid shell parsing issues.
+
+### 8. Today’s Additional Failures and Fixes
+- Shell quoting for inline sed insert
+  - Error: `gcloud compute ssh ... --command` broke when passing complex `sed` insert
+  - Resolution: Created a dedicated `remote_executor.sh` and copied it to the VM; avoided nested quoting issues
+- IndentationError from injected debug block
+  - Error: `IndentationError: unindent does not match any outer indentation level`
+  - Resolution: Adjusted debug code indentation; switched to `awk` insertion before the failing line using consistent spaces
+- Empty/incorrect `chkpt_vars`
+  - Observation: Keys appeared missing when using HF identifier directly
+  - Resolution: Downloaded a local HF snapshot (safetensors) and pointed MaxText to the local directory; confirmed populated keys and correct access pattern
+- Orbax absolute path requirement
+  - Error: `ValueError: Checkpoint path should be absolute`
+  - Resolution: Wrote output to `$HOME/maxtext/llama-3.1-8b-maxtext-checkpoint` (absolute path)
+- Invalid example GCS URL in helper text
+  - Error: `InvalidUrlError: Invalid bucket name in URL "${PROJECT_ID}-llama-checkpoints".`
+  - Resolution: Will upload via local `gsutil -m rsync -r` to a valid `gs://<bucket>/...` path
+
+## Current Status (Updated)
+- ✅ MaxText conversion succeeded on GCP VM
+- Output path: `/home/markdonaho/maxtext/llama-3.1-8b-maxtext-checkpoint`
+- Next: Upload to GCS, proceed to Session 2.4

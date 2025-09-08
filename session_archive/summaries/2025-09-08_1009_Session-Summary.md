@@ -17,5 +17,4 @@ The primary objective for this session was to resolve the `KeyError: 'norm.weigh
 
 ## Decisions
 - **Adopted Systematic Debugging**: Decided to add verification and diagnostic steps directly into the `run_conversion.sh` script (e.g., `ls`, `grep`, printing module paths) to get definitive feedback from the remote environment.
-- **Pivoted to In-Memory Patching**: After multiple failures related to patching the file on disk (due to caching and other issues), the final decision was to pivot to a highly robust method of piping the patched script contents directly into the Python interpreter, which avoids the filesystem entirely.
 - **End Session Before Final Run**: The session was concluded after preparing the final, most robust version of the script, leaving its execution for the start of the next session.

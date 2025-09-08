@@ -64,7 +64,6 @@ Actionable Steps:
 [x] Run MaxText Conversion: Completed with local HF snapshot
 [x] Verify Output: Checkpoint saved at `/home/markdonaho/maxtext/llama-3.1-8b-maxtext-checkpoint`
 [x] Download to Local: Checkpoint successfully downloaded from VM to local `./checkpoint_download` directory via `download_from_vm.sh` script.
-[ ] Upload to Kaggle Dataset: The local checkpoint directory should be uploaded as a new private Kaggle dataset.
 [x] Teardown VM: Delete the GCE VM to avoid costs.
 
 Next Steps:
@@ -78,8 +77,8 @@ Objective: To set up the Kaggle TPU notebook to run a MaxText fine-tuning job us
 
 Actionable Steps:
 
-[ ] Create Kaggle Dataset: Upload the local checkpoint files to a new private dataset.
-[ ] Configure Kaggle Notebook Access: In the notebook, add the new dataset as an input source. The path will typically be `/kaggle/input/<your-dataset-name>/`.
+[x] Create Kaggle Dataset: Upload the local checkpoint files to a new private dataset.
+[x] Configure Kaggle Notebook Access: In the notebook, add the new dataset as an input source. The path will typically be `/kaggle/input/<your-dataset-name>/`.
 [ ] Clone MaxText in Kaggle: In your notebook, clone the MaxText repository and install its requirements.
 
 !git clone [https://github.com/google/maxtext.git](https://github.com/google/maxtext.git)

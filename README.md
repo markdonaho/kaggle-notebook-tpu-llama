@@ -91,6 +91,10 @@ Actionable Steps:
     - Force-pinned TPU-safe stack around JAX 0.4.27 with compatible Flax/Optax/Chex/Orbax versions.
 [x] Prepare Training Config: Create a MaxText configuration file (.yml) for your fine-tuning job. This file will define the model paths, dataset, and training parameters. You will point the `load_parameters_path` to your new Kaggle dataset path (e.g., `/kaggle/input/llama-3-1-8b-maxtext-checkpoint/llama-3-1-8b-maxtext-checkpoint`).
 
+[x] **Notebook Rebuild**: Completely restructured the Kaggle notebook into a clean, linear sequence (steps 1-7) with numbered markdown descriptions and single code cells per step.
+[x] **Enhanced Pre-Pallas Detection**: Added comprehensive git history scanning (200 commits) with auto-rollback logic to find truly pre-pallas commits.
+[x] **Robust Dependency Management**: Implemented post-install JAX stack re-pinning (JAX 0.4.34, NumPy 1.26.4, Flax 0.10.4, Optax 0.2.5, Chex 0.1.89, Orbax 0.11.5) to prevent resolver upgrades from breaking TPU wheels.
+
 [ ] Initial Verification: Run a small MaxText command (e.g., an evaluation step with `steps=1`) to ensure it can access the Kaggle dataset checkpoint and initialize the model on the TPU correctly before starting the full training job.
 
 ## Phase 3: Fine-Tuning the Summarizer Model [ ]

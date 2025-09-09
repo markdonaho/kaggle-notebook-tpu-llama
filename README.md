@@ -94,6 +94,7 @@ Actionable Steps:
 [x] **Notebook Rebuild**: Completely restructured the Kaggle notebook into a clean, linear sequence (steps 1-7) with numbered markdown descriptions and single code cells per step.
 [x] **Enhanced Pre-Pallas Detection**: Added comprehensive git history scanning (200 commits) with auto-rollback logic to find truly pre-pallas commits.
 [x] **Robust Dependency Management**: Implemented post-install JAX stack re-pinning (JAX 0.4.34, NumPy 1.26.4, Flax 0.10.4, Optax 0.2.5, Chex 0.1.89, Orbax 0.11.5) to prevent resolver upgrades from breaking TPU wheels.
+[x] **Python Cache Clearing**: Added aggressive cache clearing mechanisms to prevent stale bytecode from causing pallas import errors. Implemented `__pycache__` directory removal after git operations and verification cells to ensure clean module loading.
 
 [ ] Initial Verification: Run a small MaxText command (e.g., an evaluation step with `steps=1`) to ensure it can access the Kaggle dataset checkpoint and initialize the model on the TPU correctly before starting the full training job.
 

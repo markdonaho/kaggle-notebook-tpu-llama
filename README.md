@@ -87,8 +87,9 @@ Actionable Steps:
 
 [x] **Dependency Conflict Resolution**: Resolved multiple dependency issues in the Kaggle notebook.
     - Added a step to downgrade NumPy to v1.26.4 to ensure compatibility with JAX `0.4.23`.
-    - Pinned the MaxText repository to an older, compatible commit (`c58317f`) to resolve conflicts between `orbax-checkpoint`, `optax`, `flax`, `chex` and the required JAX version.
-[ ] Prepare Training Config: Create a MaxText configuration file (.yml) for your fine-tuning job. This file will define the model paths, dataset, and training parameters. You will point the `load_parameters_path` to your new Kaggle dataset path (e.g., `/kaggle/input/llama-3-1-8b-maxtext-checkpoint/llama-3-1-8b-maxtext-checkpoint`).
+    - Implemented pre-pallas strategy: dynamically find commit introducing `pallas.ops.attention` and checkout its parent.
+    - Force-pinned TPU-safe stack around JAX 0.4.27 with compatible Flax/Optax/Chex/Orbax versions.
+[x] Prepare Training Config: Create a MaxText configuration file (.yml) for your fine-tuning job. This file will define the model paths, dataset, and training parameters. You will point the `load_parameters_path` to your new Kaggle dataset path (e.g., `/kaggle/input/llama-3-1-8b-maxtext-checkpoint/llama-3-1-8b-maxtext-checkpoint`).
 
 [ ] Initial Verification: Run a small MaxText command (e.g., an evaluation step with `steps=1`) to ensure it can access the Kaggle dataset checkpoint and initialize the model on the TPU correctly before starting the full training job.
 

@@ -1,7 +1,7 @@
 # Project Plan: Fine-Tuning a Llama 3.1 Summarizer for Knowledge Management
-Version: 8.1
-Date: 2025-09-08
-Status: Phase 2 - Checkpoint Ready for Kaggle Upload
+Version: 8.2
+Date: 2025-09-10
+Status: Phase 2 - Blocked on MaxText Compatibility Issues
 
 ## Legend
 ✅: Complete
@@ -72,7 +72,7 @@ Next Steps:
 - Update the Kaggle notebook to use the new Kaggle dataset as the source for the fine-tuning checkpoint.
 - Proceed to Session 2.4 (configure Kaggle for training).
 
-### Session 2.4: Configure Kaggle for MaxText Training [🔄]
+### Session 2.4: Configure Kaggle for MaxText Training [⏹️]
 
 Objective: To set up the Kaggle TPU notebook to run a MaxText fine-tuning job using the checkpoint from the newly created Kaggle dataset.
 
@@ -95,8 +95,9 @@ Actionable Steps:
 [x] **Enhanced Pre-Pallas Detection**: Added comprehensive git history scanning (200 commits) with auto-rollback logic to find truly pre-pallas commits.
 [x] **Robust Dependency Management**: Implemented post-install JAX stack re-pinning (JAX 0.4.34, NumPy 1.26.4, Flax 0.10.4, Optax 0.2.5, Chex 0.1.89, Orbax 0.11.5) to prevent resolver upgrades from breaking TPU wheels.
 [x] **Python Cache Clearing**: Added aggressive cache clearing mechanisms to prevent stale bytecode from causing pallas import errors. Implemented `__pycache__` directory removal after git operations and verification cells to ensure clean module loading.
+[x] **Debugging Documentation**: Created `KAGGLE_FAILED_ATTEMPTS.md` to systematically document all failed approaches and root cause analysis for future reference.
 
-[ ] Initial Verification: Run a small MaxText command (e.g., an evaluation step with `steps=1`) to ensure it can access the Kaggle dataset checkpoint and initialize the model on the TPU correctly before starting the full training job.
+[⏹️] **BLOCKED - Initial Verification**: Persistent `ImportError: cannot import name 'attention' from 'jax.experimental.pallas.ops'` prevents MaxText execution despite multiple sophisticated workarounds including dynamic commit search and bytecode cache clearing.
 
 ## Phase 3: Fine-Tuning the Summarizer Model [ ]
 Goal: To efficiently fine-tune the Llama 3.1 model on the prepared dataset using the MaxText framework on Kaggle TPUs.

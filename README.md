@@ -80,25 +80,13 @@ Actionable Steps:
 
 [x] Create Kaggle Dataset: Upload the local checkpoint files to a new private dataset.
 [x] Configure Kaggle Notebook Access: In the notebook, add the new dataset as an input source. The path will typically be `/kaggle/input/<your-dataset-name>/`.
-[x] Clone MaxText in Kaggle: In your notebook, clone the MaxText repository and install its requirements.
+[x] **Advanced Dependency Resolution**: Implemented a multi-stage, dynamic commit search in the notebook to find a legacy MaxText commit compatible with the Kaggle TPU's JAX v0.4.34 environment.
+    - **"Nuke and Pave" Strategy**: To prevent filesystem state errors, the notebook now `rm -rf`'s the `maxtext` directory and performs a fresh `git clone` in the main execution cell.
+    - **Dynamic Commit Search**: The script programmatically searches the git history for the latest commit *without* imports from `jax.experimental.pallas` and `jax.experimental.colocated_python`, successfully identifying commit `6ce556e1` as a compatible candidate.
+    - **In-Process Execution**: Switched from a `subprocess` call to `runpy.run_module` to execute the training script within the main notebook kernel, resolving the "TPU already in use" error.
+[x] Prepare Training Config: A minimal `minimal_maxtext_config.yaml` is now generated automatically by the notebook.
 
-!git clone [https://github.com/google/maxtext.git](https://github.com/google/maxtext.git)
-!pip install -r maxtext/requirements.txt
-
-[x] **Dependency Conflict Resolution**: Resolved multiple dependency issues in the Kaggle notebook.
-    - Added a step to downgrade NumPy to v1.26.4 to ensure compatibility with JAX `0.4.23`.
-    - Implemented pre-pallas strategy: dynamically find commit introducing `pallas.ops.attention` and checkout its parent.
-    - Force-pinned TPU-safe stack around JAX 0.4.27 with compatible Flax/Optax/Chex/Orbax versions.
-[x] Prepare Training Config: Create a MaxText configuration file (.yml) for your fine-tuning job. This file will define the model paths, dataset, and training parameters. You will point the `load_parameters_path` to your new Kaggle dataset path (e.g., `/kaggle/input/llama-3-1-8b-maxtext-checkpoint/llama-3-1-8b-maxtext-checkpoint`).
-
-[x] **Notebook Rebuild**: Completely restructured the Kaggle notebook into a clean, linear sequence (steps 1-7) with numbered markdown descriptions and single code cells per step.
-[x] **Enhanced Pre-Pallas Detection**: Added comprehensive git history scanning (200 commits) with auto-rollback logic to find truly pre-pallas commits.
-[x] **Robust Dependency Management**: Implemented post-install JAX stack re-pinning (JAX 0.4.34, NumPy 1.26.4, Flax 0.10.4, Optax 0.2.5, Chex 0.1.89, Orbax 0.11.5) to prevent resolver upgrades from breaking TPU wheels.
-[x] **Python Cache Clearing**: Added aggressive cache clearing mechanisms to prevent stale bytecode from causing pallas import errors. Implemented `__pycache__` directory removal after git operations and verification cells to ensure clean module loading.
-[x] **Debugging Documentation**: Created `KAGGLE_FAILED_ATTEMPTS.md` to systematically document all failed approaches and root cause analysis for future reference.
-[x] **Atomic Execution Cell**: Implemented a single, definitive cell that force-checks-out a target commit, installs MaxText locally, cleans all artifacts, verifies source files, and executes the training script immediately to mitigate environment instability.
-
-[⏹️] **BLOCKED - Incorrect Commit Identification**: The persistent `ImportError: cannot import name 'attention' from 'jax.experimental.pallas.ops'` has been traced to an incorrectly identified "Pallas-free" commit. The atomic execution cell's verification step proved that the target commit still contained Pallas imports, revealing the true root cause. The immediate next step is to perform a rigorous code audit of the MaxText repository to find a genuinely compatible, Pallas-free commit.
+[⏹️] **BLOCKED - AQT Dependency Installation**: The identified compatible commit (`6ce556e1`) requires the `aqt` library. The Kaggle environment blocks installation via `pip install git+https...`, and the PyPI version of `aqt` appears to be missing the required `aqt.jax.v2.google` submodule. The immediate next step is to devise a method to install the `aqt` library, likely by creating a new Kaggle dataset containing a wheel or a clone of the repository.
 
 ## Phase 3: Fine-Tuning the Summarizer Model [ ]
 Goal: To efficiently fine-tune the Llama 3.1 model on the prepared dataset using the MaxText framework on Kaggle TPUs.

@@ -84,3 +84,17 @@ This session employed a "Nuke and Pave" strategy to ensure a clean environment f
 
 ## Current Status (as of 2025-09-10 EOD)
 **BLOCKED** - We have successfully identified a MaxText commit (`6ce556e1`) that is free of the problematic JAX experimental APIs (`pallas` and `colocated_python`). However, this commit requires the `aqt` library, and we are blocked by the Kaggle environment's inability to install it correctly via `pip install git+...`. The next session must focus on finding a way to get the `aqt` library and its specific submodules installed in the notebook.
+
+### 11. AQT Tarball 404 and Legacy Submodule Missing (2025-09-10 ~17:00Z)
+- Method: Attempted to install AQT via direct tarball (to avoid git auth) and added import verification. Specifically tried `https://github.com/google-research/aqt/archive/refs/heads/main.tar.gz` and a vendored fallback target directory; then ran MaxText in-process.
+- Errors:
+  - `ERROR: HTTP error 404` for `https://github.com/google-research/aqt/archive/refs/heads/main.tar.gz`.
+  - `ModuleNotFoundError: No module named 'aqt.jax.v2.google'` from `MaxText/layers.py` (imports `from aqt.jax.v2.google import maxtext_sweeps`).
+  - Note: `aqt.jax.v2.aqt_dot_general` imported successfully, proving the installed (modern) AQT layout differs from what this MaxText commit expects.
+- Analysis: The MaxText commit `6ce556e1` (2023-09-11) expects the historical AQT package layout including `aqt.jax.v2.google`. Installing HEAD/main of AQT (2025 layout) does not provide this module. We must time-synchronize AQT to a 2023 commit compatible with MaxText.
+- Resolution (next): Pin and install AQT from a historical commit (e.g., `3275a461e59b90558352f1b40209e13462f44c38`, dated 2023-09-07) via direct tarball:
+  - `!pip install --no-deps --quiet "https://github.com/google/aqt/archive/3275a461e59b90558352f1b40209e13462f44c38.tar.gz"`
+  - Then re-run the in-process MaxText execution with `--config=...`.
+
+## Current Status (as of 2025-09-10 ~17:00Z)
+**BLOCKED (actionable)** - AQT must be installed from a time-synchronized historical commit to provide `aqt.jax.v2.google`. Next step is to update the notebook to install `google/aqt@3275a461e59b90558352f1b40209e13462f44c38` (Sep 7, 2023) and re-run. This aligns AQT with MaxText `6ce556e1`.

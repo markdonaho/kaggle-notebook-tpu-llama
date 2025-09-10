@@ -44,6 +44,13 @@ The primary challenge is a multi-faceted dependency conflict between the Kaggle 
 - **Resolution Attempts:**
     1.  **Dynamic Pre-Pallas Commit Search:** Implemented a sophisticated helper script in the notebook to walk backwards through the git history commit-by-commit, read the contents of `MaxText/layers/attentions.py`, and stop at the first commit where the `pallas.ops.attention` import was not present.
     2.  **Bytecode Cache Clearing:** Formulated the hypothesis that stale `.pyc` files were causing the import error to persist across runs. Added a step to forcefully remove all `__pycache__` directories (`find . -type d -name "__pycache__" -exec rm -r {} +`) after cloning and checking out a commit to ensure the interpreter was using the correct source files.
+    
+### 6. "Known-Good" Commit Still Contains Pallas Imports
+- **Method:** Implemented a single, atomic execution cell to force-checkout a supposedly Pallas-free commit (`5a6580f3`), install MaxText as an editable package, perform aggressive cleanup, verify `attentions.py`, and run via `python -m`.
+- **Error 1:** `ERROR: ... does not appear to be a Python project: neither 'setup.py' nor 'pyproject.toml' found.`
+- **Analysis 1:** The `pip install -e .` command failed because older MaxText commits are not structured as installable Python packages.
+- **Error 2:** `ImportError: cannot import name 'attention' from 'jax.experimental.pallas.ops'`.
+- **Analysis 2:** The verification step (`head -n 30 MaxText/layers/attentions.py | grep "pallas"`) definitively proved that the "known-good" commit (`5a6580f3`) *still contains Pallas imports*. This contradicts earlier file checks and reveals the core problem: we have yet to identify a truly Pallas-free commit that is compatible with our environment. The previous `git checkout` and file-read checks were producing misleading results, likely due to filesystem state instability in the notebook environment. The atomic execution cell revealed the true, persistent state of the file.
 
 ## Current Status (as of 2025-09-10)
-**BLOCKED** - The `pallas.ops.attention` `ImportError` is the current unresolved issue. The last executed notebook state includes the dynamic commit search and cache-clearing mechanisms, which represent the most robust attempt at a solution so far. The error indicates that despite these efforts, the Python runtime environment is still attempting to import code that is incompatible with the JAX version required by the Kaggle TPU.
+**BLOCKED** - The `pallas.ops.attention` `ImportError` remains the unresolved issue. The latest "atomic execution" attempt proved that our previously identified "Pallas-free" commit was incorrect. The immediate next step is to find a genuinely Pallas-free commit hash.

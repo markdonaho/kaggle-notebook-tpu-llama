@@ -67,10 +67,9 @@ Actionable Steps:
 [x] Upload to Kaggle Dataset: The local checkpoint directory has been successfully uploaded as a new private Kaggle dataset.
 [x] Teardown VM: Delete the GCE VM to avoid costs.
 
-Next Steps:
-- ~~Upload the local checkpoint directory (`./checkpoint_download/llama-3.1-8b-maxtext-checkpoint`) as a new private dataset on Kaggle.~~
-- Update the Kaggle notebook to use the new Kaggle dataset as the source for the fine-tuning checkpoint.
-- Proceed to Session 2.4 (configure Kaggle for training).
+[x] ~~Upload the local checkpoint directory (`./checkpoint_download/llama-3.1-8b-maxtext-checkpoint`) as a new private dataset on Kaggle.~~
+[x] Update the Kaggle notebook to use the new Kaggle dataset as the source for the fine-tuning checkpoint.
+[x] Proceed to Session 2.4 (configure Kaggle for training).
 
 ### Session 2.4: Configure Kaggle for MaxText Training [⏹️]
 
@@ -92,9 +91,9 @@ Actionable Steps:
 
 [✅] **JAX Compatibility Fixes**: Added KeyArray compatibility shim for JAX 0.4.34, identified sys.path requirements for MaxText imports. Updated failure documentation with latest issues (#15-17). Status: Partially unblocked, verification pending.
 
-[✅] **AQT Installation Correction**: Fixed PyPI package name collision (Anki `aqt` vs Google AQT) by switching to `google/aqt` pinned commit `3275a461e59b90558352f1b40209e13462f44c38` (2023-09-07). Added minimal shim fallback for `aqt.jax.v2.google.maxtext_sweeps`. Updated failure documentation with issue #18.
+[ ] **AQT Installation Correction**: Fixed PyPI package name collision (Anki `aqt` vs Google AQT) by switching to `google/aqt` pinned commit `3275a461e59b90558352f1b40209e13462f44c38` (2023-09-07). Added minimal shim fallback for `aqt.jax.v2.google.maxtext_sweeps`. Updated failure documentation with issue #18.
 
-[✅] **MaxText Flag Handling**: Updated execution cell to try multiple config flag variants sequentially (`--config`, `--config_file`, `--config_files`, `--yaml_config`, `--config_path`) with helpshort fallback. Resolved "Unknown command line flag" errors from legacy MaxText commit.
+[ ] **MaxText Flag Handling**: Updated execution cell to try multiple config flag variants sequentially (`--config`, `--config_file`, `--config_files`, `--yaml_config`, `--config_path`) with helpshort fallback. Resolved "Unknown command line flag" errors from legacy MaxText commit.
 
 ## Phase 3: Fine-Tuning the Summarizer Model [ ]
 Goal: To efficiently fine-tune the Llama 3.1 model on the prepared dataset using the MaxText framework on Kaggle TPUs.

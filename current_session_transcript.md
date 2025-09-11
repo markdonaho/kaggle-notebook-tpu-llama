@@ -64,3 +64,13 @@ Based on the most recent session summary (2025-09-11_1038), the project is curre
 
 [CODE] Files/Cells impacted
 - FIneTuningLlama.ipynb: Cell 14 (AQT install), Cell 16 (MaxText run flags)
+
+[ANALYSIS] New error from run: Wrong `aqt` package installed from PyPI (Anki AQT)
+- Evidence: Import path `aqt.__init__` attempts `import anki.lang` → `ModuleNotFoundError: No module named 'anki'`.
+- Root cause: `pip install aqt` pulled Anki's `aqt`, not Google AQT. Our shim ran on top of the wrong base package.
+
+[CODE] Fix applied
+- Uninstalled PyPI `aqt`.
+- Cloned `google/aqt` and checked out pinned SHA `3275a461...` (2023-09-07).
+- Installed local `google/aqt` without deps and reinstalled `tensorboardX`.
+- Kept minimal shim fallback for `aqt.jax.v2.google.maxtext_sweeps` if absent.

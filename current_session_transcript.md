@@ -28,3 +28,14 @@
 [PLAN] Next steps:
 1) Install legacy AQT from `google-research/google-research` snapshot or locate commit containing `aqt/jax/v2/google/maxtext_sweeps.py`; fallback shim only if needed.
 2) Fix MaxText run by ensuring `sys.path` includes `MaxText/` so `from layers import Transformer` resolves; also ensure `tensorflow-datasets` present.
+
+[CMD] User ran updated notebook cells. New failure observed:
+- Traceback ends with `AttributeError: module 'jax.random' has no attribute 'KeyArray'`.
+
+[ANALYSIS] The pinned MaxText commit expects `jax.random.KeyArray` type alias (present in older JAX APIs). In `jax==0.4.34`, this alias may be absent or relocated. A minimal, non-invasive compatibility shim can define `jax.random.KeyArray = jnp.ndarray` (or a small TypedDict) early in the process to satisfy imports and type annotations.
+
+[PLAN] Add a short compatibility shim immediately before invoking `MaxText.train`:
+- If `hasattr(jax.random, 'KeyArray')` is False, set `jax.random.KeyArray = type('KeyArray', (), {})` or assign to `jax.Array`/`jnp.ndarray` to bypass attribute access during import.
+- Re-run minimal `steps: 1` verification.
+
+[CODE] Inserted JAX KeyArray compatibility shim into `FIneTuningLlama.ipynb` run cell (before `runpy.run_module`): assigns `jax.random.KeyArray` to `jax.Array` fallback `jnp.ndarray` if missing.

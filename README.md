@@ -86,9 +86,7 @@ Actionable Steps:
     - **In-Process Execution**: Switched from a `subprocess` call to `runpy.run_module` to execute the training script within the main notebook kernel, resolving the "TPU already in use" error.
 [x] Prepare Training Config: A minimal `minimal_maxtext_config.yaml` is now generated automatically by the notebook.
 
-[⏹️] **BLOCKED - AQT Dependency (time-synchronization required)**: The identified compatible commit (`6ce556e1`) requires `aqt.jax.v2.google` from a historical AQT layout. Installing modern AQT (PyPI or `main`) fails. Next step: install AQT from a matching 2023 commit via tarball to align with MaxText, e.g.:
-  - `!pip install --no-deps --quiet "https://github.com/google/aqt/archive/3275a461e59b90558352f1b40209e13462f44c38.tar.gz"`
-  - Re-run minimal MaxText train in-process with `--config=...`.
+[🔄] **AQT Dependency Fix Applied**: Updated notebook to install AQT from historical commit `3275a461e59b90558352f1b40209e13462f44c38` (2023-09-07) via correct `google/aqt` repository. Ready for testing on Kaggle TPU environment.
 
 ## Phase 3: Fine-Tuning the Summarizer Model [ ]
 Goal: To efficiently fine-tune the Llama 3.1 model on the prepared dataset using the MaxText framework on Kaggle TPUs.

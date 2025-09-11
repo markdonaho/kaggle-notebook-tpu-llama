@@ -98,3 +98,8 @@ This session employed a "Nuke and Pave" strategy to ensure a clean environment f
 
 ## Current Status (as of 2025-09-10 ~17:00Z)
 **BLOCKED (actionable)** - AQT must be installed from a time-synchronized historical commit to provide `aqt.jax.v2.google`. Next step is to update the notebook to install `google/aqt@3275a461e59b90558352f1b40209e13462f44c38` (Sep 7, 2023) and re-run. This aligns AQT with MaxText `6ce556e1`.
+
+### 12. AQT Repository URL Fix (2025-09-10 ~12:15Z)
+- **Method**: Updated notebook to use correct `google/aqt` repository instead of `google-research/aqt`
+- **Fix**: Changed AQT installation URLs from `google-research/aqt/archive/refs/heads/main.tar.gz` to `google/aqt/archive/3275a461e59b90558352f1b40209e13462f44c38.tar.gz`
+- **Status**: Notebook updated, ready for testing on Kaggle TPU environment

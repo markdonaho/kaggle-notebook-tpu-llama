@@ -103,3 +103,24 @@ This session employed a "Nuke and Pave" strategy to ensure a clean environment f
 - **Method**: Updated notebook to use correct `google/aqt` repository instead of `google-research/aqt`
 - **Fix**: Changed AQT installation URLs from `google-research/aqt/archive/refs/heads/main.tar.gz` to `google/aqt/archive/3275a461e59b90558352f1b40209e13462f44c38.tar.gz`
 - **Status**: Notebook updated, ready for testing on Kaggle TPU environment
+
+### 13. AQT Tarball 404 and Subsequent `tensorboardX` Failure (2025-09-11)
+- **Method**: Executed the notebook with the corrected AQT tarball URL pointing to a historical commit.
+- **Error 1**: The corrected tarball URL `https://github.com/google/aqt/archive/3275a461e59b90558352f1b40209e13462f44c38.tar.gz` still resulted in a 404 error.
+- **Analysis 1**: Direct tarball downloads for specific commits are unreliable.
+- **Resolution Attempt**: Implemented an AQT "shim" in the notebook. If the legacy `aqt.jax.v2.google.maxtext_sweeps` module failed to import, the code would create a dummy module structure on the filesystem to satisfy the import and allow execution to proceed for verification purposes.
+- **Error 2**: After implementing the shim, a new error emerged: `ModuleNotFoundError: No module named 'tensorboardX'`.
+- **Analysis 2**: The historical MaxText commit (`6ce556e1`) has another implicit dependency on `tensorboardX`, which was not being installed.
+
+### 14. Robust AQT Git Clone and Persistent `google` Module Failure (2025-09-11)
+- **Method**: To address both the tarball and `tensorboardX` issues, a dedicated dependency setup cell was created in the notebook. This cell performs the following steps:
+  1.  `git clone` the `google/aqt` repository into `/kaggle/working/aqt-src`.
+  2.  Programmatically search the git history for the latest commit that contains the legacy `aqt.jax.v2.google.maxtext_sweeps.py` file.
+  3.  `git checkout` that specific commit.
+  4.  Install AQT from the local source (`pip install .`).
+  5.  Install `tensorboardX`.
+- **Error**: The execution of this new cell failed. The log output shows the script could not find a commit containing the legacy module: `Warning: No commit with both legacy modules found; using current HEAD`. Consequently, the subsequent import check `import aqt.jax.v2.google.maxtext_sweeps` failed with `No module named 'aqt.jax.v2.google'`.
+- **Analysis**: The logic to find the correct historical commit in the AQT repository is flawed. The `git cat-file -e` check for `aqt/jax/v2/google/maxtext_sweeps.py` is likely failing for all commits, causing the script to fall back to using the `HEAD` commit, which does not have the required module structure. The shim creation also fails because the base `aqt.jax.v2.google` path doesn't exist.
+
+## Current Status (as of 2025-09-11)
+**BLOCKED** - The attempt to create a robust, self-healing AQT installation has failed. The script is unable to identify the correct historical AQT commit, leading to a persistent `ModuleNotFoundError` for the required `aqt.jax.v2.google` submodule. The immediate next step is to fix the commit-finding logic within the AQT setup cell in the Kaggle notebook.

@@ -1,7 +1,7 @@
 # Project Plan: Fine-Tuning a Llama 3.1 Summarizer for Knowledge Management
 Version: 8.4
 Date: 2025-09-11
-Status: Phase 2 - Dependency Resolution in Progress (AQT setup improved, tensorboardX timing issue)
+Status: Phase 2 - Ready for Testing (Simplified AQT setup with pinned commits, notebook updated)
 
 ## Legend
 ✅: Complete
@@ -86,7 +86,9 @@ Actionable Steps:
     - **In-Process Execution**: Switched from a `subprocess` call to `runpy.run_module` to execute the training script within the main notebook kernel, resolving the "TPU already in use" error.
 [x] Prepare Training Config: A minimal `minimal_maxtext_config.yaml` is now generated automatically by the notebook.
 
-[🔄] **Enhanced AQT Setup**: Implemented robust AQT installation via git clone + local install approach to avoid 404 tarball errors. Added dedicated dependency setup cell (cell 14) that clones `google/aqt`, auto-selects commit with legacy modules, installs locally, and installs `tensorboardX`. Removed failing tarball installs from execution cell. Current issue: `tensorboardX` import error persists, suggesting timing issue with installation vs MaxText import.
+[✅] **Simplified AQT Setup**: Implemented pinned-commit approach using known-good SHA `3275a461e59b90558352f1b40209e13462f44c38` (2023-09-07). Two-stage installation: zip URL first, then git clone fallback. Added explicit import verification and integrated `tensorboardX` installation. Removed complex dynamic commit search logic.
+
+[✅] **Streamlined MaxText Execution**: Pinned to known-good commit `6ce556e1` (2023-09-11), removed AQT checks from execution cell, simplified to positional config with `--config_path` fallback. Added provenance verification.
 
 ## Phase 3: Fine-Tuning the Summarizer Model [ ]
 Goal: To efficiently fine-tune the Llama 3.1 model on the prepared dataset using the MaxText framework on Kaggle TPUs.

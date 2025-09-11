@@ -39,3 +39,9 @@
 - Re-run minimal `steps: 1` verification.
 
 [CODE] Inserted JAX KeyArray compatibility shim into `FIneTuningLlama.ipynb` run cell (before `runpy.run_module`): assigns `jax.random.KeyArray` to `jax.Array` fallback `jnp.ndarray` if missing.
+
+[CODE] Updated `KAGGLE_FAILED_ATTEMPTS.md` with new entries (#15–#17):
+- google-research monorepo AQT install failure
+- MaxText `layers` import path fix via `sys.path`
+- JAX `KeyArray` API mismatch and compatibility shim
+Also refreshed the Current Status to reflect partial unblocking and pending verification.

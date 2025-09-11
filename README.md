@@ -1,7 +1,7 @@
 # Project Plan: Fine-Tuning a Llama 3.1 Summarizer for Knowledge Management
-Version: 8.4
+Version: 8.5
 Date: 2025-09-11
-Status: Phase 2 - Ready for Testing (Simplified AQT setup with pinned commits, notebook updated)
+Status: Phase 2 - Partially Unblocked (JAX compatibility fixes applied, verification pending)
 
 ## Legend
 ✅: Complete
@@ -89,6 +89,8 @@ Actionable Steps:
 [✅] **Simplified AQT Setup**: Implemented pinned-commit approach using known-good SHA `3275a461e59b90558352f1b40209e13462f44c38` (2023-09-07). Two-stage installation: zip URL first, then git clone fallback. Added explicit import verification and integrated `tensorboardX` installation. Removed complex dynamic commit search logic.
 
 [✅] **Streamlined MaxText Execution**: Pinned to known-good commit `6ce556e1` (2023-09-11), removed AQT checks from execution cell, simplified to positional config with `--config_path` fallback. Added provenance verification.
+
+[✅] **JAX Compatibility Fixes**: Added KeyArray compatibility shim for JAX 0.4.34, identified sys.path requirements for MaxText imports. Updated failure documentation with latest issues (#15-17). Status: Partially unblocked, verification pending.
 
 ## Phase 3: Fine-Tuning the Summarizer Model [ ]
 Goal: To efficiently fine-tune the Llama 3.1 model on the prepared dataset using the MaxText framework on Kaggle TPUs.

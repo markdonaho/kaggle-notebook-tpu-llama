@@ -124,3 +124,25 @@ This session employed a "Nuke and Pave" strategy to ensure a clean environment f
 
 ## Current Status (as of 2025-09-11)
 **BLOCKED** - The attempt to create a robust, self-healing AQT installation has failed. The script is unable to identify the correct historical AQT commit, leading to a persistent `ModuleNotFoundError` for the required `aqt.jax.v2.google` submodule. The immediate next step is to fix the commit-finding logic within the AQT setup cell in the Kaggle notebook.
+
+### 15. AQT via google-research monorepo snapshot fails (2025-09-11)
+- Method: Cloned `google-research/google-research`, checked out a snapshot before 2023-09-10, and attempted `pip install /kaggle/working/google-research/aqt`.
+- Error: `pip install google-research/aqt exit code: 1`; subsequent imports failed with `No module named 'aqt'`.
+- Analysis: The monorepo snapshot did not install a top-level `aqt` package with the legacy layout. The fallback shim that only created `aqt/jax/v2/google/maxtext_sweeps.py` was insufficient because the `aqt` package itself was not importable.
+
+### 16. MaxText in-process run: 'layers' import failure due to sys.path (2025-09-11)
+- Method: Executed `MaxText.train` via `runpy` at commit `6ce556e1`.
+- Error: `ModuleNotFoundError: No module named 'layers'` from `MaxText/train.py`.
+- Resolution: Added both the repo root (`/kaggle/working/maxtext`) and the package root (`/kaggle/working/maxtext/MaxText`) to `sys.path` prior to running. This progressed execution to the next error.
+
+### 17. JAX API mismatch: `jax.random.KeyArray` missing (2025-09-11)
+- Method: Continued in-process execution after fixing `sys.path`.
+- Error: `AttributeError: module 'jax.random' has no attribute 'KeyArray'` arising in `MaxText/aqt/jax/v2/config.py` type annotations.
+- Analysis: The older MaxText/AQT code expects `jax.random.KeyArray`, which is not present in `jax==0.4.34` on Kaggle TPUs.
+- Resolution Attempt: Inserted a compatibility shim before running MaxText: define `jax.random.KeyArray = jax.Array` (fallback to `jnp.ndarray` if needed). Re-run pending to verify.
+
+## Current Status (as of 2025-09-11 ~08:45)
+**PARTIALLY UNBLOCKED (verification pending)**
+- Addressed import path issue for `layers` via `sys.path` fix.
+- Added JAX `KeyArray` compatibility shim to satisfy older AQT/MaxText type usage.
+- AQT legacy module `aqt.jax.v2.google.maxtext_sweeps` still not available via install; monorepo approach failed; minimal shim is only viable if base `aqt` package imports. Next action: re-run minimal `steps: 1` and observe; if imports still fail, revisit AQT install source (e.g., pinned commit ZIP for `google/aqt`, or vendored minimal modules).

@@ -146,3 +146,9 @@ This session employed a "Nuke and Pave" strategy to ensure a clean environment f
 - Addressed import path issue for `layers` via `sys.path` fix.
 - Added JAX `KeyArray` compatibility shim to satisfy older AQT/MaxText type usage.
 - AQT legacy module `aqt.jax.v2.google.maxtext_sweeps` still not available via install; monorepo approach failed; minimal shim is only viable if base `aqt` package imports. Next action: re-run minimal `steps: 1` and observe; if imports still fail, revisit AQT install source (e.g., pinned commit ZIP for `google/aqt`, or vendored minimal modules).
+
+### 18. Wrong PyPI `aqt` package (Anki) caused `import anki.lang` failure (2025-09-11)
+- Method: Installed `aqt` from PyPI as a base, then attempted to shim `aqt.jax.v2.google.maxtext_sweeps`.
+- Error: `ModuleNotFoundError: No module named 'anki'` during `import aqt` in `MaxText/MaxText/layers.py` dependency chain.
+- Analysis: PyPI's `aqt` resolves to the Anki Qt application package, not Google's Accurate Quantized Training (AQT) library required by MaxText. The shim layered on top of the wrong base package and could not succeed.
+- Resolution: Uninstall PyPI `aqt`, clone `google/aqt` and pin to historical commit `3275a461e59b90558352f1b40209e13462f44c38` (2023-09-07), install from local source (`pip install --no-deps /kaggle/working/aqt-src`), keep a minimal shim only if `aqt.jax.v2.google.maxtext_sweeps` remains absent. Re-run pending.

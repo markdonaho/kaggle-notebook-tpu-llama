@@ -1,7 +1,7 @@
 # Project Plan: Fine-Tuning a Llama 3.1 Summarizer for Knowledge Management
-Version: 8.5
+Version: 8.6
 Date: 2025-09-11
-Status: Phase 2 - Partially Unblocked (JAX compatibility fixes applied, verification pending)
+Status: Phase 2 - Partially Unblocked (AQT installation corrected, MaxText flag handling improved, verification pending)
 
 ## Legend
 ✅: Complete
@@ -91,6 +91,10 @@ Actionable Steps:
 [✅] **Streamlined MaxText Execution**: Pinned to known-good commit `6ce556e1` (2023-09-11), removed AQT checks from execution cell, simplified to positional config with `--config_path` fallback. Added provenance verification.
 
 [✅] **JAX Compatibility Fixes**: Added KeyArray compatibility shim for JAX 0.4.34, identified sys.path requirements for MaxText imports. Updated failure documentation with latest issues (#15-17). Status: Partially unblocked, verification pending.
+
+[✅] **AQT Installation Correction**: Fixed PyPI package name collision (Anki `aqt` vs Google AQT) by switching to `google/aqt` pinned commit `3275a461e59b90558352f1b40209e13462f44c38` (2023-09-07). Added minimal shim fallback for `aqt.jax.v2.google.maxtext_sweeps`. Updated failure documentation with issue #18.
+
+[✅] **MaxText Flag Handling**: Updated execution cell to try multiple config flag variants sequentially (`--config`, `--config_file`, `--config_files`, `--yaml_config`, `--config_path`) with helpshort fallback. Resolved "Unknown command line flag" errors from legacy MaxText commit.
 
 ## Phase 3: Fine-Tuning the Summarizer Model [ ]
 Goal: To efficiently fine-tune the Llama 3.1 model on the prepared dataset using the MaxText framework on Kaggle TPUs.

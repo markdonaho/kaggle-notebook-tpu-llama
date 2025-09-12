@@ -23,3 +23,5 @@ ModuleNotFoundError: No module named 'aqt.jax.v2'
 [ANALYSIS] The AQT package was not available in the environment at run time. This indicates the AQT setup cell either did not execute or did not install the legacy layout providing `aqt.jax.v2`. Next action: add a dedicated, pinned AQT install cell (clone google/aqt, checkout 3275a461e59b90558352f1b40209e13462f44c38, pip install from local, install tensorboardX) and verify `import aqt.jax.v2` before running MaxText.
 
 [CODE] Edited `FIneTuningLlama.ipynb` Step 7 cell: replaced pinned-SHA install with auto-discovery of a commit containing `aqt/jax/v2/aqt_dot_general.py`, install from local source, verify `aqt.jax.v2` and `aqt.jax.v2.aqt_dot_general`, and shim `aqt.jax.v2.google.maxtext_sweeps` if missing. This mirrors and strengthens the README instructions.
+
+[CODE] Updated `FIneTuningLlama.ipynb` Step 7 cell again: removed dynamic commit search entirely. Now it clones `google/aqt`, checks out pinned SHA `3275a461e59b90558352f1b40209e13462f44c38` deterministically, installs from local source, verifies `aqt.jax.v2` imports, and applies a minimal shim for `aqt.jax.v2.google.maxtext_sweeps` only if needed.

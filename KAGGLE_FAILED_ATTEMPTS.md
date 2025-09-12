@@ -152,3 +152,15 @@ This session employed a "Nuke and Pave" strategy to ensure a clean environment f
 - Error: `ModuleNotFoundError: No module named 'anki'` during `import aqt` in `MaxText/MaxText/layers.py` dependency chain.
 - Analysis: PyPI's `aqt` resolves to the Anki Qt application package, not Google's Accurate Quantized Training (AQT) library required by MaxText. The shim layered on top of the wrong base package and could not succeed.
 - Resolution: Uninstall PyPI `aqt`, clone `google/aqt` and pin to historical commit `3275a461e59b90558352f1b40209e13462f44c38` (2023-09-07), install from local source (`pip install --no-deps /kaggle/working/aqt-src`), keep a minimal shim only if `aqt.jax.v2.google.maxtext_sweeps` remains absent. Re-run pending.
+
+### 19. AQT legacy layout still missing during MaxText run (2025-09-12)
+- Method: Fresh clone of MaxText at commit `6ce556e1`; executed training via in-process `runpy` with sequential config flags (`--config`, `--config_file`, `--config_files`, `--yaml_config`, `--config_path`).
+- Error: `ModuleNotFoundError: No module named 'aqt.jax.v2'` from `MaxText/layers.py` import `from aqt.jax.v2 import aqt_dot_general as aqt`.
+- Analysis: The notebook session did not have the legacy AQT package layout installed at run time. Either the AQT setup cell did not execute or the install did not pin to a historical commit that exposes `aqt/jax/v2`. The presence of `Found 8 devices.` confirms JAX initialized; failure occurs at first AQT import.
+- Resolution (next): Add a dedicated AQT install cell early in the notebook that:
+  1) `git clone https://github.com/google/aqt.git /kaggle/working/aqt-src`
+  2) `cd /kaggle/working/aqt-src && git checkout 3275a461e59b90558352f1b40209e13462f44c38`
+  3) `pip install --no-deps /kaggle/working/aqt-src`
+  4) `pip install tensorboardX`
+  5) Verify with `python - <<'PY'\nimport importlib; import sys; m = importlib.import_module('aqt.jax.v2'); print('AQT v2 OK:', m.__file__)\nPY`
+If the import still fails, vendor a minimal shim only after confirming base `aqt` is importable.

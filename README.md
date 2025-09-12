@@ -91,7 +91,35 @@ Actionable Steps:
 
 [✅] **JAX Compatibility Fixes**: Added KeyArray compatibility shim for JAX 0.4.34, identified sys.path requirements for MaxText imports. Updated failure documentation with latest issues (#15-17). Status: Partially unblocked, verification pending.
 
-[ ] **AQT Installation Correction**: Fixed PyPI package name collision (Anki `aqt` vs Google AQT) by switching to `google/aqt` pinned commit `3275a461e59b90558352f1b40209e13462f44c38` (2023-09-07). Added minimal shim fallback for `aqt.jax.v2.google.maxtext_sweeps`. Updated failure documentation with issue #18.
+[ ] **AQT Installation Correction**: Fixed PyPI package name collision (Anki `aqt` vs Google AQT) by switching to `google/aqt` pinned commit `3275a461e59b90558352f1b40209e13462f44c38` (2023-09-07). Added minimal shim fallback for `aqt.jax.v2.google.maxtext_sweeps`. Updated failure documentation with issues #18-19. Add and run the following dedicated notebook cell BEFORE MaxText execution:
+
+```python
+# Install legacy Google AQT (pinned) and dependencies
+import os, subprocess, sys, textwrap
+
+def run(cmd, check=True):
+    print("$", cmd)
+    result = subprocess.run(cmd, shell=True, check=check, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    print(result.stdout)
+
+aqt_dir = "/kaggle/working/aqt-src"
+if os.path.exists(aqt_dir):
+    run(f"rm -rf {aqt_dir}")
+run(f"git clone --depth 1 https://github.com/google/aqt.git {aqt_dir}")
+run(f"cd {aqt_dir} && git fetch --depth 1 origin 3275a461e59b90558352f1b40209e13462f44c38 && git checkout 3275a461e59b90558352f1b40209e13462f44c38")
+run(f"pip install --no-deps {aqt_dir}")
+run("pip install tensorboardX")
+
+# Verify legacy layout is present before proceeding
+code = textwrap.dedent(
+    """
+import importlib
+m = importlib.import_module('aqt.jax.v2')
+print('AQT v2 module path:', m.__file__)
+    """
+)
+run(f"python - <<'PY'\n{code}\nPY")
+```
 
 [ ] **MaxText Flag Handling**: Updated execution cell to try multiple config flag variants sequentially (`--config`, `--config_file`, `--config_files`, `--yaml_config`, `--config_path`) with helpshort fallback. Resolved "Unknown command line flag" errors from legacy MaxText commit.
 

@@ -170,3 +170,29 @@ If the import still fails, vendor a minimal shim only after confirming base `aqt
 - Error: `ModuleNotFoundError: No module named 'aqt.jax.v2'` raised from `MaxText/MaxText/layers.py` at the point it imports `from aqt.jax.v2 import aqt_dot_general as aqt`.
 - Analysis: The pinned AQT source likely contains `aqt/jax/v2` on disk but that subpackage is not included in the wheel/installed package at that commit (packaging excludes the directory). As a result, `pip install` succeeds yet the `v2` API is missing at runtime.
 - Resolution (next): After installing AQT from local source, if `import aqt.jax.v2` fails but `/kaggle/working/aqt-src/aqt/jax/v2` exists, copy that folder directly into the installed package location (e.g., `site-packages/aqt/jax/v2`). Then re-try imports. Keep the minimal shim for `aqt.jax.v2.google.maxtext_sweeps` only if the base `v2` package imports successfully.
+
+### 21. In-process MaxText run fails: config argv parsed as 'MaxText.train' (2025-09-12)
+- Method: Fresh clone at commit `6ce556e1`; AQT installed and verified; ran in-process via `runpy.run_module('MaxText.train')` with:
+  - `sys.path += ['/kaggle/working/maxtext', '/kaggle/working/maxtext/MaxText']`
+  - `sys.argv = ['-m', 'MaxText.train', '/kaggle/working/config/minimal_maxtext_config.yaml']`
+- Error:
+  - `FileNotFoundError: [Errno 2] No such file or directory: 'MaxText.train'`
+  - Origin: `MaxText/pyconfig.py` reads `argv[1]` as the YAML path; our `argv[1]` was `'MaxText.train'` due to the `-m` style argv we set.
+- Analysis:
+  - This legacy entrypoint expects the config file as positional `argv[1]` (no flags). Passing `['-m', 'MaxText.train', CONFIG]` shifts the config to `argv[2]`, causing `pyconfig` to try opening `'MaxText.train'` as a file.
+- Resolution:
+  - Set `sys.argv` to a minimal positional form where `argv[1]` is the YAML path, e.g. `sys.argv = ['train', str(CONFIG_PATH)]` (or `['', CONFIG]`). Then call `runpy.run_module('MaxText.train', run_name='__main__')`.
+  - Keep both repo and package roots on `sys.path`.
+
+### 22. Second run after manual filepath lookup: new error (2025-09-12)
+- Method: User manually located an older/legacy filepath in the MaxText repo and adjusted the notebook accordingly; re-ran the verification step.
+- Error: [awaiting exact notebook output from user]
+- Analysis (preliminary):
+  - If the error is a path issue (e.g., missing module/file), likely candidates are:
+    1) Wrong relative base when opening YAML (use absolute `CONFIG_PATH`).
+    2) Import path for `layers` or `pyconfig` (ensure both repo root and `MaxText/` added to `sys.path`).
+    3) Flag name mismatch (`--config*`) vs positional-only config in this commit.
+  - If it’s an import error involving AQT or `tensorboardX`, verify Step 7 ran successfully in the same kernel session.
+- Resolution (next):
+  - Apply the argv fix from #21, then re-run.
+  - If error persists, share the exact stack trace to finalize this entry and adjust paths/flags accordingly.

@@ -25,3 +25,7 @@ ModuleNotFoundError: No module named 'aqt.jax.v2'
 [CODE] Edited `FIneTuningLlama.ipynb` Step 7 cell: replaced pinned-SHA install with auto-discovery of a commit containing `aqt/jax/v2/aqt_dot_general.py`, install from local source, verify `aqt.jax.v2` and `aqt.jax.v2.aqt_dot_general`, and shim `aqt.jax.v2.google.maxtext_sweeps` if missing. This mirrors and strengthens the README instructions.
 
 [CODE] Updated `FIneTuningLlama.ipynb` Step 7 cell again: removed dynamic commit search entirely. Now it clones `google/aqt`, checks out pinned SHA `3275a461e59b90558352f1b40209e13462f44c38` deterministically, installs from local source, verifies `aqt.jax.v2` imports, and applies a minimal shim for `aqt.jax.v2.google.maxtext_sweeps` only if needed.
+
+[ANALYSIS] External recommendation: replace shallow fetch of pinned SHA with robust `git fetch --unshallow` then `git checkout` to avoid "not our ref". This addresses the root cause rather than patching post-install.
+
+[CODE] Edited `FIneTuningLlama.ipynb` Step 7: changed AQT git sequence to `git fetch --unshallow || git fetch --all --tags --prune` followed by `git checkout <PINNED_SHA>`. Updated `README.md` AQT snippet to match.

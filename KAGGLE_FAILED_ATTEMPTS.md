@@ -164,3 +164,9 @@ This session employed a "Nuke and Pave" strategy to ensure a clean environment f
   4) `pip install tensorboardX`
   5) Verify with `python - <<'PY'\nimport importlib; import sys; m = importlib.import_module('aqt.jax.v2'); print('AQT v2 OK:', m.__file__)\nPY`
 If the import still fails, vendor a minimal shim only after confirming base `aqt` is importable.
+
+### 20. Pinned AQT commit installed, but `aqt.jax.v2` still not importable (2025-09-12)
+- Method: Simplified Step 7 to deterministically clone `google/aqt`, checkout pinned SHA `3275a461e59b90558352f1b40209e13462f44c38`, install from local source (no deps), install `tensorboardX`, then run MaxText in-process.
+- Error: `ModuleNotFoundError: No module named 'aqt.jax.v2'` raised from `MaxText/MaxText/layers.py` at the point it imports `from aqt.jax.v2 import aqt_dot_general as aqt`.
+- Analysis: The pinned AQT source likely contains `aqt/jax/v2` on disk but that subpackage is not included in the wheel/installed package at that commit (packaging excludes the directory). As a result, `pip install` succeeds yet the `v2` API is missing at runtime.
+- Resolution (next): After installing AQT from local source, if `import aqt.jax.v2` fails but `/kaggle/working/aqt-src/aqt/jax/v2` exists, copy that folder directly into the installed package location (e.g., `site-packages/aqt/jax/v2`). Then re-try imports. Keep the minimal shim for `aqt.jax.v2.google.maxtext_sweeps` only if the base `v2` package imports successfully.

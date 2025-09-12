@@ -1,7 +1,7 @@
 # Project Plan: Fine-Tuning a Llama 3.1 Summarizer for Knowledge Management
 Version: 8.6
 Date: 2025-09-11
-Status: Phase 2 - Partially Unblocked (AQT installation corrected, MaxText flag handling improved, verification pending)
+Status: Phase 2 - Partially Unblocked (AQT installation corrected with robust git operations, MaxText flag handling improved, verification pending)
 
 ## Legend
 ✅: Complete
@@ -94,31 +94,45 @@ Actionable Steps:
 [ ] **AQT Installation Correction**: Fixed PyPI package name collision (Anki `aqt` vs Google AQT) by switching to `google/aqt` pinned commit `3275a461e59b90558352f1b40209e13462f44c38` (2023-09-07). Added minimal shim fallback for `aqt.jax.v2.google.maxtext_sweeps`. Updated failure documentation with issues #18-19. Add and run the following dedicated notebook cell BEFORE MaxText execution:
 
 ```python
-# Install legacy Google AQT (pinned) and dependencies
-import os, subprocess, sys, textwrap
+# Install Google AQT from pinned commit; if installed wheel misses aqt/jax/v2,
+# vendor it from source into site-packages, then verify and shim google module.
+import os, subprocess, sys, importlib, pathlib, shutil
 
-def run(cmd, check=True):
-    print("$", cmd)
-    result = subprocess.run(cmd, shell=True, check=check, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-    print(result.stdout)
-
+PINNED_SHA = '3275a461e59b90558352f1b40209e13462f44c38'
 aqt_dir = "/kaggle/working/aqt-src"
-if os.path.exists(aqt_dir):
-    run(f"rm -rf {aqt_dir}")
-run(f"git clone --depth 1 https://github.com/google/aqt.git {aqt_dir}")
-run(f"cd {aqt_dir} && git fetch --depth 1 origin 3275a461e59b90558352f1b40209e13462f44c38 && git checkout 3275a461e59b90558352f1b40209e13462f44c38")
-run(f"pip install --no-deps {aqt_dir}")
-run("pip install tensorboardX")
+subprocess.run([sys.executable, '-m', 'pip', 'uninstall', '-y', '-q', 'aqt'])
+subprocess.run(['bash', '-lc', f'rm -rf {aqt_dir} && git clone https://github.com/google/aqt.git {aqt_dir}'])
+subprocess.run(['bash', '-lc', f'cd {aqt_dir} && git fetch --unshallow || git fetch --all --tags --prune'])
+subprocess.run(['bash', '-lc', f'cd {aqt_dir} && git checkout {PINNED_SHA}'])
+subprocess.run([sys.executable, '-m', 'pip', 'install', '--no-deps', aqt_dir])
+subprocess.run([sys.executable, '-m', 'pip', 'install', 'tensorboardX'])
 
-# Verify legacy layout is present before proceeding
-code = textwrap.dedent(
-    """
-import importlib
-m = importlib.import_module('aqt.jax.v2')
-print('AQT v2 module path:', m.__file__)
-    """
-)
-run(f"python - <<'PY'\n{code}\nPY")
+def ok(name):
+    try:
+        importlib.import_module(name)
+        print('OK:', name)
+        return True
+    except Exception as e:
+        print('FAIL:', name, e)
+        return False
+
+ok('aqt')
+v2 = ok('aqt.jax.v2')
+if not v2 and os.path.isdir(f'{aqt_dir}/aqt/jax/v2'):
+    import aqt as _aqt
+    dest = pathlib.Path(_aqt.__file__).parent / 'jax' / 'v2'
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(f'{aqt_dir}/aqt/jax/v2', dest, dirs_exist_ok=True)
+    print('Vendored aqt/jax/v2 into', dest)
+    v2 = ok('aqt.jax.v2')
+ok('aqt.jax.v2.aqt_dot_general') if v2 else None
+if v2 and not ok('aqt.jax.v2.google.maxtext_sweeps'):
+    import aqt as _aqt
+    gdir = pathlib.Path(_aqt.__file__).parent / 'jax' / 'v2' / 'google'
+    gdir.mkdir(parents=True, exist_ok=True)
+    (gdir / '__init__.py').write_text('')
+    (gdir / 'maxtext_sweeps.py').write_text('def get_sweep():\n    return {}\n')
+    ok('aqt.jax.v2.google.maxtext_sweeps')
 ```
 
 [ ] **MaxText Flag Handling**: Updated execution cell to try multiple config flag variants sequentially (`--config`, `--config_file`, `--config_files`, `--yaml_config`, `--config_path`) with helpshort fallback. Resolved "Unknown command line flag" errors from legacy MaxText commit.

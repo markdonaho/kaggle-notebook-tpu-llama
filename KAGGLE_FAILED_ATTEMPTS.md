@@ -183,3 +183,37 @@ If the import still fails, vendor a minimal shim only after confirming base `aqt
 - Resolution:
   - Set `sys.argv` to a minimal positional form where `argv[1]` is the YAML path, e.g. `sys.argv = ['train', str(CONFIG_PATH)]` (or `['', CONFIG]`). Then call `runpy.run_module('MaxText.train', run_name='__main__')`.
   - Keep both repo and package roots on `sys.path`.
+
+### 22. AQT Git Checkout Failure with Pinned Commit (2025-09-12)
+- **Method**: Attempted to checkout pinned AQT commit `3275a461e59b90558352f1b40209e13462f44c38` (2023-09-07) after cloning `google/aqt` repository.
+- **Error**: 
+  - `fatal: --unshallow on a complete repository does not make sense`
+  - `fatal: reference is not a tree: 3275a461e59b90558352f1b40209e13462f44c38`
+- **Analysis**: The git clone appears to be shallow, and the specific commit hash is not available in the shallow clone. The `git fetch --unshallow` command fails because the repository is already complete, but the commit is still not found.
+- **Resolution**: The code falls back to using the current HEAD commit, which may not have the required legacy AQT module structure. This could lead to missing `aqt.jax.v2.google.maxtext_sweeps` module.
+- **Status**: Execution appears to continue with HEAD commit, but AQT module compatibility is uncertain.
+
+### 23. Execution Status: Argv Fix Applied, AQT Issues Remain (2025-09-12)
+- **Method**: Applied argv fix by setting `sys.argv = ['train', str(CONFIG_PATH)]` before calling `runpy.run_module('MaxText.train')`.
+- **Status**: Argv configuration error resolved. Execution proceeds past the previous `FileNotFoundError: 'MaxText.train'` error.
+- **Remaining Issues**: 
+  - AQT git checkout failure for pinned commit
+  - Potential missing legacy AQT modules due to using HEAD instead of pinned commit
+  - Execution output truncated, full error details pending
+- **Next Steps**: Monitor complete execution output to identify next blocker after argv fix.
+
+### 24. Missing Required Config Parameter: 'dtype' (2025-09-12)
+- **Method**: Successfully applied argv fix and executed MaxText.train with positional config argument.
+- **Error**: 
+  - `KeyError: 'dtype'` in `pyconfig.py` line 87: `raw_keys["dtype"] = jax.numpy.dtype(raw_keys["dtype"])`
+  - Origin: The minimal config YAML is missing required parameters that MaxText expects.
+- **Analysis**: 
+  - The argv fix worked perfectly - MaxText is now reading the config file correctly
+  - However, our minimal config only includes `run_name`, `load_parameters_path`, `steps`, and `dataset_type`
+  - MaxText's config parser expects additional required parameters including `dtype`
+  - The error occurs during config validation before training begins
+- **Resolution**: 
+  - Add missing required config parameters to the minimal YAML
+  - Common required parameters include: `dtype`, `model_name`, `base_output_directory`, `max_target_length`, `max_prefill_predict_length`
+  - Use reasonable defaults for a minimal verification run
+- **Status**: Argv fix confirmed successful. Next step is to expand the minimal config with required parameters.

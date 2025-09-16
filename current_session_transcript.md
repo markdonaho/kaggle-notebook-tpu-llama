@@ -45,3 +45,6 @@
 - Markdown: "## 5. Install dependencies from requirements.txt"
 - Shell: "# 5. Install MaxText requirements"
 [ANALYSIS] Updated TODO: "Add Steps 3-5 env check code and MaxText clone cells" → completed
+
+[ERROR] Python SyntaxError when running shell commands in Step 4/5 as Python
+[FIX] Converted Steps 4 and 5 cells to Python cells with %%bash magic to run bash

@@ -42,3 +42,18 @@
 - **Error**: `FileNotFoundError: The expected checkpoint directory was not found at '/kaggle/input/llama-3-1-8b-maxtext-checkpoint/0'`
 - **Root Cause**: Hardcoded assumption that MaxText checkpoints are always in step-numbered subdirectories, but this particular dataset has the checkpoint files directly in the root.
 - **Resolution**: Updated checkpoint detection logic to first check if required files (`_CHECKPOINT_METADATA`, `items`) exist directly in the dataset root, with fallback to checking "0" subdirectory if not found.
+
+### Attempt #6: NumPy 2.0.2 Compatibility Issue with TensorFlow
+- **Date**: 2025-09-16
+- **Action**: Attempted to run MaxText verification with `steps: 1` after resolving checkpoint detection and configuration generation.
+- **Outcome**: **Failed**. TensorFlow import failed due to NumPy version incompatibility.
+- **Error**: 
+  ```
+  A module that was compiled using NumPy 1.x cannot be run in
+  NumPy 2.0.2 as it may crash. To support both 1.x and 2.x
+  versions of NumPy, modules must be compiled with NumPy 2.0.
+  AttributeError: _ARRAY_API not found
+  ```
+- **Root Cause**: TensorFlow 2.9.0 was compiled against NumPy 1.x but the environment has NumPy 2.0.2 installed. The `_ARRAY_API` symbol is missing in NumPy 2.0.2.
+- **Evidence**: Return code 1, clear error message indicating NumPy version incompatibility
+- **Resolution**: Need to either downgrade NumPy to <2.0 or find TensorFlow version compatible with NumPy 2.0.2

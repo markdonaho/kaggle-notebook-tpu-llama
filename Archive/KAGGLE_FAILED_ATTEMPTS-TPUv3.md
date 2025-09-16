@@ -278,3 +278,27 @@ This session focused on resolving the persistent GCS path validation error, whic
 - ✅ The complex bytecode caching issue has been circumvented.
 - ❗ A new configuration requirement has been identified.
 - **Next Steps**: Add `enable_checkpointing: true` to the config and re-run the main execution cell. The expectation is a successful `steps: 1` run or the identification of the final required configuration key.
+
+
+
+## Final Entry & Strategic Pivot to TPU v5e (2025-09-16)
+
+**Final Status on TPU v3-8:**
+The final series of attempts on the TPU v3-8 platform successfully resolved the most complex dependency and execution issues, including the `pallas` import errors, TPU lock errors via in-process execution, and multiple AQT installation failures. The immediate blocker became a series of `KeyError` exceptions during the configuration validation stage within `pyconfig.py`.
+
+* **Last Known Error:** After applying a patch to `pyconfig.py` to bypass GCS path validation and clearing the Python bytecode cache to ensure the patch was active, the script failed with `KeyError: 'dataset_path'`. This indicated that the minimal config YAML was still missing required parameters for the legacy version of MaxText.
+
+**Reason for Pivot:**
+A recent update to the Kaggle platform introduced support for TPU v5e accelerators. This new hardware provides a modern software stack with an up-to-date version of JAX, directly addressing the root cause of nearly all previously documented issues.
+
+The availability of a modern JAX environment makes the following workarounds obsolete:
+* The need to pin MaxText to a specific legacy commit (`6ce556e1`) to avoid experimental JAX features.
+* The entire multi-step process for installing a time-synchronized, historical version of the AQT library and shimming its missing modules.
+* Programmatically patching MaxText source code with `sed` to bypass GCS validation checks.
+* Forced clearing of `__pycache__` directories to apply source code patches.
+* The JAX compatibility shim for `jax.random.KeyArray`.
+
+**Decision:**
+Continued development on the TPU v3-8 platform is a technical dead end that relies on fragile, legacy code. To improve stability, maintainability, and performance, the project is officially pivoting to the new TPU v5e environment.
+
+**This log is now complete and will be archived.** A new log will track the development effort on the new TPU platform.

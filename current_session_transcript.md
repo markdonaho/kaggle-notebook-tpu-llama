@@ -2,6 +2,8 @@
 - Old verification cells (3-5) renumbered to section 4 (config inline) and moved after setup
 - Inserted new section 6 (verification) cells after dependency install (cells 11-13)
 - Updated TF notes header to section 7
+
+[CODE] Removed duplicate verification cells (3-5) to keep a single consolidated verification section after dependencies.
 # Session Transcript - 2025-09-16_0912
 
 ## Session Information

@@ -34,3 +34,11 @@
 - **Error**: (Implicit) The script ran as if no checkpoint was provided, ignoring the found path.
 - **Root Cause**: The environment variable `MAXTEXT_CHECKPOINT_DIR` was set, but the YAML generation logic did not include the `load_parameters_path` key, which is what MaxText's `train.py` actually uses to load a checkpoint.
 - **Resolution**: Updated the YAML generation cell to read the `MAXTEXT_CHECKPOINT_DIR` environment variable and dynamically insert its value into the `.yml` file under the `load_parameters_path` key.
+
+### Attempt #5: Incorrect Checkpoint Directory Structure Assumption
+- **Date**: 2025-09-16
+- **Action**: Attempted to run verification with checkpoint path `/kaggle/input/llama-3-1-8b-maxtext-checkpoint/0`.
+- **Outcome**: **Failed**. The code assumed checkpoint files would be in a "0" subdirectory, but they were actually in the root dataset directory.
+- **Error**: `FileNotFoundError: The expected checkpoint directory was not found at '/kaggle/input/llama-3-1-8b-maxtext-checkpoint/0'`
+- **Root Cause**: Hardcoded assumption that MaxText checkpoints are always in step-numbered subdirectories, but this particular dataset has the checkpoint files directly in the root.
+- **Resolution**: Updated checkpoint detection logic to first check if required files (`_CHECKPOINT_METADATA`, `items`) exist directly in the dataset root, with fallback to checking "0" subdirectory if not found.

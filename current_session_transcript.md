@@ -1,3 +1,8 @@
+[CODE] Updated `KAGGLE-FAILED-ATTEMPTS-TPUv5.md` with Attempt #2 (multihost_runner flags error) and resolution to use `maxtext.train` module with PYTHONPATH.
+[CODE] Updated notebook verification cell to run `maxtext.train` as a module with PYTHONPATH set to `maxtext/src`, avoiding `multihost_runner.py` flags.
+
+[USER_DIRECTIVE] Stop pushing changes frequently; only push when explicitly requested.
+[ANALYSIS] Adjustment: Suspend git pushes by default. Continue local edits and request approval before any future push.
 [CODE] Reordered `FIneTuningLlama.ipynb`:
 - Old verification cells (3-5) renumbered to section 4 (config inline) and moved after setup
 - Inserted new section 6 (verification) cells after dependency install (cells 11-13)

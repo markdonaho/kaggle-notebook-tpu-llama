@@ -79,3 +79,19 @@
 - **Evidence**: Printed YAML includes a TODO and omits the checkpoint load key.
 - **Root Cause**: Exact checkpoint-loading key in MaxText config not yet confirmed and therefore not written into YAML.
 - **Resolution**: Add a deterministic discovery step to identify the correct key from source (grep and source inspection), then regenerate YAML to include the key (e.g., `load_parameters_path: /kaggle/input/llama-3-1-8b-maxtext-checkpoint`) and re-run verification.
+
+### Attempt #9: Protobuf / TensorFlow Incompatibility
+- **Date**: 2025-09-17
+- **Action**: Ran the refactored notebook which correctly generated the config YAML and invoked the training script.
+- **Outcome**: **Failed**.
+- **Error**: `TypeError: Descriptors cannot be created directly.`
+- **Root Cause**: A known version incompatibility between the `google-protobuf` library and TensorFlow. Newer versions of `protobuf` have stricter API requirements that the version of TensorFlow in the environment does not meet.
+- **Resolution**: Set the `PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python` environment variable before running the training script. This forces `protobuf` to use a slower, but more compatible, pure-Python implementation.
+
+### Attempt #10: JAX / MaxText Version Mismatch (`colocated_python`)
+- **Date**: 2025-09-17
+- **Action**: Ran the verification script after fixing the Protobuf issue.
+- **Outcome**: **Failed**.
+- **Error**: `ImportError: cannot import name 'colocated_python' from 'jax.experimental'`.
+- **Root Cause**: The `main` branch of `MaxText` was too new for the stable JAX version (0.4.34) in the Kaggle environment. The code attempted to import an experimental JAX feature that did not exist in that version.
+- **Resolution**: Switched from cloning the shallow `main` branch to cloning the full repository and checking out a specific, known-stable commit (`c581c81`) that is compatible with the environment's JAX version.

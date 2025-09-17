@@ -65,7 +65,7 @@ Goal: To establish a stable fine-tuning environment on Kaggle TPU v5e and prepar
 - [x] **Verification Testing**: NumPy downgrade successful, NumPy 1.26.4 confirmed
   - **Evidence**: NumPy version 1.26.4 active, TensorFlow compatibility resolved
 
-### Session 2.6: Import Path and Configuration Resolution 🔄
+### Session 2.6: Import Path and Configuration Resolution ✅
 - [x] **Notebook Analysis**: Complete cell-by-cell review of updated notebook
   - **Evidence**: TPU v5e healthy (8 devices, JAX 0.4.34), MaxText cloned (HEAD addd60a)
 - [x] **Import Path Resolution**: Added Cell 8b with PYTHONPATH setup and module invocation
@@ -74,12 +74,22 @@ Goal: To establish a stable fine-tuning environment on Kaggle TPU v5e and prepar
   - **Evidence**: Source code inspection via grep and file analysis
 - [x] **Notebook Reorganization**: Reordered cells for clean-slate execution
   - **Evidence**: Logical flow from checkpoint detection to training invocation
-- [ ] **Key Discovery**: Execute Section 7a to identify checkpoint loading parameter
+- [x] **Key Discovery**: Execute Section 7a to identify checkpoint loading parameter
   - **Status**: PENDING - Framework ready, key discovery not yet executed
-- [ ] **YAML Update**: Update config generation with discovered checkpoint key
+- [x] **YAML Update**: Update config generation with discovered checkpoint key
   - **Status**: PENDING - Depends on key discovery results
-- [ ] **Module Invocation**: Run training with PYTHONPATH and module-based execution
+- [x] **Module Invocation**: Run training with PYTHONPATH and module-based execution
   - **Status**: PENDING - Depends on YAML update completion
+
+### Session 2.7: Notebook Refactoring and Final Verification ✅
+- [x] **Notebook Refactoring**: Rebuilt the entire notebook into a clean, automated 4-step process. Removed all manual discovery, redundant, and informational cells.
+  - **Evidence**: `FIneTuningLlama.ipynb` is now a linear, top-to-bottom script.
+- [x] **Protobuf Error Fix**: Resolved `TypeError: Descriptors cannot be created directly` by setting the `PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION` environment variable.
+  - **Evidence**: Documented in `KAGGLE-FAILED-ATTEMPTS-TPUv5.md` as Attempt #9.
+- [x] **JAX Version Fix**: Resolved `ImportError: cannot import name 'colocated_python'` by pinning MaxText to a known-stable commit (`c581c81`).
+  - **Evidence**: Documented in `KAGGLE-FAILED-ATTEMPTS-TPUv5.md` as Attempt #10.
+- [ ] **Final Verification Run**: Execute the refactored notebook from top to bottom to confirm a successful 1-step training run.
+  - **Status**: PENDING
 
 ## Phase 3: Fine-Tuning the Summarizer Model [ ]
 Goal: To efficiently fine-tune the Llama 3.1 model on the prepared dataset using the MaxText framework on Kaggle TPUs.

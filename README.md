@@ -88,8 +88,12 @@ Goal: To establish a stable fine-tuning environment on Kaggle TPU v5e and prepar
   - **Evidence**: Documented in `KAGGLE-FAILED-ATTEMPTS-TPUv5.md` as Attempt #9.
 - [x] **JAX Version Fix**: Resolved `ImportError: cannot import name 'colocated_python'` by pinning MaxText to a known-stable commit (`c581c81`).
   - **Evidence**: Documented in `KAGGLE-FAILED-ATTEMPTS-TPUv5.md` as Attempt #10.
+- [x] **Git Repository Issues**: Encountered persistent `git checkout` failures due to shallow clones and corrupted repository states.
+  - **Evidence**: Multiple failed attempts with `git fetch --unshallow` and "nuke and pave" strategies.
+- [x] **Notebook Reversion**: Reverted to simple shallow clone approach per user directive to undo complex git logic.
+  - **Evidence**: Notebook restored to state when debugging Python errors, with protobuf fix intact.
 - [ ] **Final Verification Run**: Execute the refactored notebook from top to bottom to confirm a successful 1-step training run.
-  - **Status**: PENDING
+  - **Status**: PENDING - Notebook ready for testing with current configuration
 
 ## Phase 3: Fine-Tuning the Summarizer Model [ ]
 Goal: To efficiently fine-tune the Llama 3.1 model on the prepared dataset using the MaxText framework on Kaggle TPUs.

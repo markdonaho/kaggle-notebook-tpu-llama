@@ -1,7 +1,7 @@
 # Project Plan: Fine-Tuning a Llama 3.1 Summarizer for Knowledge Management
-Version: 9.0
-Date: 2025-09-16
-Status: Phase 2 - Strategic Pivot to TPU v5e
+Version: 9.1
+Date: 2025-09-17
+Status: Phase 2.5 - Import Path and Configuration Resolution
 
 ## Legend
 ✅: Complete
@@ -55,15 +55,31 @@ Goal: To establish a stable fine-tuning environment on Kaggle TPU v5e and prepar
   - **Errors**: NumPy compatibility issues (`_ARRAY_API not found`), TensorFlow import failures
   - **Status**: BLOCKED - verification run did not succeed due to compatibility issues
 
-### Session 2.5: NumPy Compatibility Fix Implementation 🔄
-- [x] **Cell Analysis**: Comprehensive analysis of all 19 notebook cells completed
+### Session 2.5: NumPy Compatibility Fix Implementation ✅
+- [x] **Cell Analysis**: Comprehensive analysis of all notebook cells completed
   - **Evidence**: 8/19 successful, 2/19 failed, 1/19 partially successful
 - [x] **NumPy Fix**: Added Cell 6b with `pip install "numpy<2"` command
   - **Evidence**: Clear error message analysis and documented solution
 - [x] **Parameter Discovery**: Added Cell 7b with comprehensive YAML/Python file scanning
   - **Evidence**: Systematic approach to discover actual MaxText configuration keys
-- [ ] **Verification Testing**: User currently testing NumPy fix with kernel restart
-  - **Status**: PENDING - No evidence yet of successful verification run
+- [x] **Verification Testing**: NumPy downgrade successful, NumPy 1.26.4 confirmed
+  - **Evidence**: NumPy version 1.26.4 active, TensorFlow compatibility resolved
+
+### Session 2.6: Import Path and Configuration Resolution 🔄
+- [x] **Notebook Analysis**: Complete cell-by-cell review of updated notebook
+  - **Evidence**: TPU v5e healthy (8 devices, JAX 0.4.34), MaxText cloned (HEAD addd60a)
+- [x] **Import Path Resolution**: Added Cell 8b with PYTHONPATH setup and module invocation
+  - **Evidence**: ModuleNotFoundError analysis and documented resolution approach
+- [x] **Configuration Discovery Framework**: Added Section 7a with deterministic key discovery
+  - **Evidence**: Source code inspection via grep and file analysis
+- [x] **Notebook Reorganization**: Reordered cells for clean-slate execution
+  - **Evidence**: Logical flow from checkpoint detection to training invocation
+- [ ] **Key Discovery**: Execute Section 7a to identify checkpoint loading parameter
+  - **Status**: PENDING - Framework ready, key discovery not yet executed
+- [ ] **YAML Update**: Update config generation with discovered checkpoint key
+  - **Status**: PENDING - Depends on key discovery results
+- [ ] **Module Invocation**: Run training with PYTHONPATH and module-based execution
+  - **Status**: PENDING - Depends on YAML update completion
 
 ## Phase 3: Fine-Tuning the Summarizer Model [ ]
 Goal: To efficiently fine-tune the Llama 3.1 model on the prepared dataset using the MaxText framework on Kaggle TPUs.

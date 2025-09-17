@@ -42,3 +42,29 @@ Never claim completion without observable evidence. Verification requires observ
 [CODE] Reordered new cells to follow clean-slate execution:
 - Inserted 7c (YAML regen with load_parameters_path) immediately after checkpoint detection (Section 6).
 - Inserted 8b (proper module invocation) immediately before verification run section.
+
+[ANALYSIS] User requested cell-by-cell output review for the latest run, but `FIneTuningLlama.ipynb` is currently not present in the workspace (deleted). Need the updated notebook file to proceed with analysis.
+
+[ANALYSIS] Updated notebook present. Beginning cell-by-cell output review focusing on TPU visibility, dependency setup, checkpoint detection, config generation, and training invocation.
+
+[ANALYSIS] Cell-by-cell outputs (latest notebook):
+- Cell 2 (TPU/JAX): 8 TPU devices visible; JAX dot test OK; env healthy (jax/jaxlib 0.4.34).
+- Cell 4 (Clone): Repo present; HEAD addd60a; top-level files listed.
+- Cell 7 (Requirements): Ran with pkg-config present; output truncated; no fatal error shown; JAX import check intended.
+- Cell 9 (NumPy fix): NumPy 1.26.4 active; downgrade effective.
+- Cell 11 (Checkpoint): Dataset root valid; indicators found; MAXTEXT_CHECKPOINT_DIR set to /kaggle/input/llama-3-1-8b-maxtext-checkpoint.
+- Cell 15 (Config gen): Wrote minimal YAML without checkpoint loading key; explicitly flagged as TBD.
+- Cell 17 (Verification): Failed with ModuleNotFoundError: No module named 'MaxText'; indicates missing PYTHONPATH or module invocation.
+- Cells 19–21 (Param scans): 'steps' and 'per_device_batch_size' present; no argparse-style params; confirms custom config system.
+
+[DECISION] Next actions remain:
+1) Add YAML key for checkpoint load; 2) Set PYTHONPATH and run `python -m MaxText.train` with the generated YAML; 3) Re-run 1-step verification and review logs.
+
+[CODE] Inserted permanent section 7a before config generation:
+- Bash: grep for checkpoint keys in `maxtext/src`
+- Bash: view `MaxText/checkpointing.py` (top 200 lines)
+- Bash: view `MaxText/train.py` (top 200 lines)
+
+[CODE] Updated `KAGGLE-FAILED-ATTEMPTS-TPUv5.md` with:
+- Attempt #7: ModuleNotFoundError due to missing PYTHONPATH when invoking train script directly
+- Attempt #8: YAML missing checkpoint load key; added plan for deterministic key discovery and regeneration

@@ -57,3 +57,25 @@
 - **Root Cause**: TensorFlow 2.9.0 was compiled against NumPy 1.x but the environment has NumPy 2.0.2 installed. The `_ARRAY_API` symbol is missing in NumPy 2.0.2.
 - **Evidence**: Return code 1, clear error message indicating NumPy version incompatibility
 - **Resolution**: Need to either downgrade NumPy to <2.0 or find TensorFlow version compatible with NumPy 2.0.2
+
+### Attempt #7: Training Invocation Without MaxText Package Context
+- **Date**: 2025-09-17
+- **Action**: Ran verification via direct script path:
+  - Command: `python maxtext/src/MaxText/train.py /kaggle/working/verification_minimal.yml`
+- **Outcome**: **Failed**.
+- **Error**: 
+  ```
+  ModuleNotFoundError: No module named 'MaxText'
+  ```
+- **Root Cause**: Python could not resolve the `MaxText` package because `maxtext/src` was not on `PYTHONPATH` and the script was not invoked as a module.
+- **Resolution**: Run with proper import context by either:
+  - Setting `PYTHONPATH` to include `maxtext/src` and invoking the module: `python -m MaxText.train ...`, or
+  - Exporting `PYTHONPATH` before running the script path.
+
+### Attempt #8: Configuration Missing Checkpoint Load Key
+- **Date**: 2025-09-17
+- **Action**: Generated minimal YAML (`/kaggle/working/verification_minimal.yml`) with `steps: 1` and `per_device_batch_size: 1` after detecting checkpoint at `/kaggle/input/llama-3-1-8b-maxtext-checkpoint`.
+- **Outcome**: **Incomplete configuration**. Checkpoint path not included in YAML, so training would not load preexisting parameters even if invocation succeeded.
+- **Evidence**: Printed YAML includes a TODO and omits the checkpoint load key.
+- **Root Cause**: Exact checkpoint-loading key in MaxText config not yet confirmed and therefore not written into YAML.
+- **Resolution**: Add a deterministic discovery step to identify the correct key from source (grep and source inspection), then regenerate YAML to include the key (e.g., `load_parameters_path: /kaggle/input/llama-3-1-8b-maxtext-checkpoint`) and re-run verification.

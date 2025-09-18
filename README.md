@@ -1,7 +1,7 @@
 # Project Plan: Fine-Tuning a Llama 3.1 Summarizer for Knowledge Management
-Version: 9.2
+Version: 9.3
 Date: 2025-09-18
-Status: Phase 2.6 - Hardcoded Dependencies Implementation
+Status: Phase 2.7 - Repository Structure Correction and Hardcoded Paths
 
 ALL DEPENDENCIES ARE TO BE HARD CODED. THIS IS NOT OPTIONAL. LOOKUPS IN CODE ARE NOT AN OPTION EITHER. IF A LOOKUP IS NECESSARY, LOOK IT UP(not in the code), THEN HARD CODE THE VALUE. Acknowledge that you have read this line before proceeding.
 
@@ -98,6 +98,20 @@ Goal: To establish a stable fine-tuning environment on Kaggle TPU v5e and prepar
   - **Evidence**: Notebook restored to state when debugging Python errors, with protobuf fix intact.
 - [ ] **Final Verification Run**: Execute the refactored notebook from top to bottom to confirm a successful 1-step training run.
   - **Status**: PENDING - Notebook ready for testing with current configuration
+
+### Session 2.8: Repository Structure Correction and Hardcoded Paths ✅
+- [x] **Hardcoding Policy Acknowledgment**: Explicitly acknowledged mandatory rule for hardcoded dependencies.
+  - **Evidence**: Shifted from diagnostic code to external research-based solutions.
+- [x] **External Research**: Conducted web search to determine correct MaxText repository structure at commit `4651cb3c73de`.
+  - **Evidence**: Discovered that repository structure does not include `src` directory; package lives in root.
+- [x] **Path Correction**: Updated notebook with correct hardcoded paths based on research.
+  - **Evidence**: `PYTHONPATH=/kaggle/working/maxtext` and script path `/kaggle/working/maxtext/MaxText/train.py`.
+- [x] **Notebook Cleanup**: Removed all diagnostic cells and lookup code from notebook.
+  - **Evidence**: Clean, production-ready notebook with no runtime lookups.
+- [x] **Failure Documentation**: Updated Attempt #13 with correct root cause analysis.
+  - **Evidence**: The `src` directory assumption was fundamentally incorrect for this commit.
+- [ ] **Final Verification Run**: Execute the corrected notebook to confirm successful 1-step training run.
+  - **Status**: PENDING - User will run notebook and analyze outputs in next session
 
 ## Phase 3: Fine-Tuning the Summarizer Model [ ]
 Goal: To efficiently fine-tune the Llama 3.1 model on the prepared dataset using the MaxText framework on Kaggle TPUs.

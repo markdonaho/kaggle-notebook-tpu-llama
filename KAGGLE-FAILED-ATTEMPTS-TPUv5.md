@@ -111,3 +111,11 @@
 - **Error**: `ModuleNotFoundError: No module named 'MaxText'`
 - **Root Cause**: Despite setting `PYTHONPATH` correctly for the subprocess shell, Python's module (`-m`) resolution mechanism failed to find the `MaxText` package. The reason for this is unclear but likely specific to the Kaggle notebook's `subprocess` or shell environment. The `PYTHONPATH` variable appears to be ignored by the `python -m` command in this context.
 - **Resolution**: Change the invocation method. Instead of using `python -m`, invoke the script directly via its full path (`.../maxtext/src/MaxText/train.py`). This changes how Python sets up its `sys.path` and may be more robust. The `PYTHONPATH` must still be set to `/kaggle/working/maxtext/src` to ensure the script's internal imports (`from MaxText import ...`) resolve correctly.
+
+### Attempt #13: Direct Script Invocation Fails with "No such file"
+- **Date**: 2025-09-18
+- **Action**: Modified Step 4 to call the training script by its full, absolute path: `... python /kaggle/working/maxtext/src/MaxText/train.py ...`.
+- **Outcome**: **Failed**.
+- **Error**: `can't open file ... No such file or directory` (Return Code 2)
+- **Root Cause**: The operating system cannot find the file at the specified path. The previous `ModuleNotFoundError` was a Python import issue; this is a more fundamental filesystem path issue. The most likely cause is case sensitivity in the path (`MaxText` vs. `maxtext`).
+- **Resolution**: Add a diagnostic cell to the notebook to list the directory contents (`ls -R`) and confirm the exact, case-sensitive path to `train.py`. Then, update the execution command in Step 4 to use the verified correct path.

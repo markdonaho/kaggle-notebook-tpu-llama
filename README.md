@@ -1,7 +1,9 @@
 # Project Plan: Fine-Tuning a Llama 3.1 Summarizer for Knowledge Management
-Version: 9.1
-Date: 2025-09-17
-Status: Phase 2.5 - Import Path and Configuration Resolution
+Version: 9.2
+Date: 2025-09-18
+Status: Phase 2.6 - Hardcoded Dependencies Implementation
+
+ALL DEPENDENCIES ARE TO BE HARD CODED. THIS IS NOT OPTIONAL. LOOKUPS IN CODE ARE NOT AN OPTION EITHER. IF A LOOKUP IS NECESSARY, LOOK IT UP(not in the code), THEN HARD CODE THE VALUE. Acknowledge that you have read this line before proceeding.
 
 ## Legend
 ✅: Complete
@@ -26,6 +28,8 @@ Goal: To produce a high-quality dataset of 500-2000 examples that teach the mode
 
 ## Phase 2: Environment & Model Preparation (TPU v5e Pivot) ✅
 Goal: To establish a stable fine-tuning environment on Kaggle TPU v5e and prepare the JAX-native Llama 3.1 model using the MaxText framework. This pivot renders most previous workarounds for the TPU v3 environment obsolete.
+
+**IMPORTANT**: All dependency versions are now hardcoded to prevent compatibility issues. MaxText is pinned to commit `4651cb3c73de` (compatible with JAX 0.4.34 per NVIDIA JAX Release 25.01).
 
 ### Session 2.1: Strategic Pivot Planning ✅
 - [x] **Strategic Decision**: Complete pivot from TPU v3-8 to TPU v5e platform

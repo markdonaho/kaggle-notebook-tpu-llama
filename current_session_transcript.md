@@ -18,4 +18,8 @@
 [ANALYSIS] Execution failed in Step 4 with `ModuleNotFoundError: No module named 'MaxText'`
 [ANALYSIS] Root cause appears to be `PYTHONPATH` not being correctly propagated to the subprocess for module invocation
 [PLAN] Propose a more robust fix by setting `PYTHONPATH` directly in the shell command executed by the subprocess
+[EXECUTION] User ran notebook with proposed fix
+[ANALYSIS] Execution failed again with `ModuleNotFoundError: No module named 'MaxText'`
+[ANALYSIS] Root cause is now suspected to be the `python -m` module invocation itself, which seems to ignore `PYTHONPATH` in the Kaggle subprocess environment.
+[PLAN] Propose a new fix: invoke the `train.py` script directly by its full path instead of as a module.
 

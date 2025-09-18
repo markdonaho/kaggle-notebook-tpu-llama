@@ -103,3 +103,11 @@
 - **Error**: `ModuleNotFoundError: No module named 'MaxText'`
 - **Root Cause**: The `PYTHONPATH` set in the notebook's Python kernel (`os.environ`) did not correctly propagate to the new Python process launched by `subprocess.Popen`. The subprocess environment was not configured to find the `MaxText` module.
 - **Resolution**: Modify the subprocess call to explicitly set the `PYTHONPATH` as part of the command itself, ensuring the environment is correctly configured for the module execution. This is more robust than modifying the parent process's environment.
+
+### Attempt #12: PYTHONPATH with Module Invocation (`-m`) Fails
+- **Date**: 2025-09-18
+- **Action**: Modified Step 4 to prepend `PYTHONPATH=/kaggle/working/maxtext/src` to the shell command and invoked the script as a module: `... python -m MaxText.train ...`.
+- **Outcome**: **Failed**.
+- **Error**: `ModuleNotFoundError: No module named 'MaxText'`
+- **Root Cause**: Despite setting `PYTHONPATH` correctly for the subprocess shell, Python's module (`-m`) resolution mechanism failed to find the `MaxText` package. The reason for this is unclear but likely specific to the Kaggle notebook's `subprocess` or shell environment. The `PYTHONPATH` variable appears to be ignored by the `python -m` command in this context.
+- **Resolution**: Change the invocation method. Instead of using `python -m`, invoke the script directly via its full path (`.../maxtext/src/MaxText/train.py`). This changes how Python sets up its `sys.path` and may be more robust. The `PYTHONPATH` must still be set to `/kaggle/working/maxtext/src` to ensure the script's internal imports (`from MaxText import ...`) resolve correctly.

@@ -127,3 +127,17 @@
 - **Error**: `ls: cannot access '/kaggle/working/maxtext/src': No such file or directory`
 - **Root Cause**: The fundamental assumption about the repository's structure was incorrect. The MaxText repository at the pinned commit (`4651cb3c73de`) does not have a `src` directory. The `train.py` script and its associated packages are located elsewhere.
 - **Resolution**: Modify the diagnostic cell to list the *entire* contents of `/kaggle/working/maxtext` to discover the correct directory structure. Then, update the `PYTHONPATH` and the direct script path in the execution step to match the real file locations.
+
+### Attempt #14: Missing Configuration Parameters (`base_emb_dim`)
+- **Date**: 2025-09-18
+- **Action**: Executed the corrected notebook with hardcoded paths after repository structure correction.
+- **Outcome**: **Partial Success** - Significant progress made.
+- **Error**: `ValueError: Key base_emb_dim does not exist in config /kaggle/working/verification_minimal.yml`
+- **Root Cause**: The YAML configuration was missing required parameters that MaxText expects for model initialization. The error occurred during config validation after successful module loading and checkpoint detection.
+- **Evidence**: Execution progressed to "Updating following parameters in config base_emb_dim: 4096" before failing
+- **Resolution**: Updated the YAML configuration with comprehensive parameters including:
+  - `base_emb_dim: 4096` (resolves immediate error)
+  - `dtype: "bfloat16"` (from historical attempts)
+  - Complete model architecture parameters for llama3.1-8b
+  - Training hyperparameters with sensible defaults
+- **Status**: Configuration updated, ready for testing

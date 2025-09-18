@@ -95,3 +95,11 @@
 - **Error**: `ImportError: cannot import name 'colocated_python' from 'jax.experimental'`.
 - **Root Cause**: The `main` branch of `MaxText` was too new for the stable JAX version (0.4.34) in the Kaggle environment. The code attempted to import an experimental JAX feature that did not exist in that version.
 - **Resolution**: Switched from cloning the shallow `main` branch to cloning the full repository and checking out a specific, known-stable commit (`c581c81`) that is compatible with the environment's JAX version.
+
+### Attempt #11: `PYTHONPATH` Not Propagating to Subprocess
+- **Date**: 2025-09-18
+- **Action**: Ran the fully refactored notebook. Step 4 set `os.environ['PYTHONPATH']` and `sys.path` before calling `subprocess.Popen` with `python -m MaxText.train`.
+- **Outcome**: **Failed**.
+- **Error**: `ModuleNotFoundError: No module named 'MaxText'`
+- **Root Cause**: The `PYTHONPATH` set in the notebook's Python kernel (`os.environ`) did not correctly propagate to the new Python process launched by `subprocess.Popen`. The subprocess environment was not configured to find the `MaxText` module.
+- **Resolution**: Modify the subprocess call to explicitly set the `PYTHONPATH` as part of the command itself, ensuring the environment is correctly configured for the module execution. This is more robust than modifying the parent process's environment.
